@@ -315,6 +315,7 @@ export class Model {
 
   constructor(data: any) {
     this.id = this.getClass().idSelector(data);
+    // this.loadJSON(data);
     makeObservable(this, {
       isDeleted: computed,
       delete: action,
