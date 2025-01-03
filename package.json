@@ -1,0 +1,32 @@
+{
+  "name": "xorm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "dev": "rollup -c --watch",
+    "build": "rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "author": "Austin Malerba",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.24.2",
+    "mobx": "^6.13.5",
+    "rollup": "^4.29.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-esbuild": "^6.1.1"
+  },
+  "peerDependencies": {
+    "mobx": ">5.0.0"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1"
+  }
+}
