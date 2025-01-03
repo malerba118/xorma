@@ -59,7 +59,7 @@ class OperatingSystemModel extends Model.withType(DataType<OperatingSystem>()) {
   }
 }
 
-class NodeModel extends Model.withType({} as Node) {
+class NodeModel extends Model.withType(DataType<Node>()) {
   type: "file" | "folder";
   name: string;
   parent_id: string | null;
@@ -81,7 +81,7 @@ class NodeModel extends Model.withType({} as Node) {
   }
 }
 
-class FileNodeModel extends NodeModel.withType({} as FileNode) {
+class FileNodeModel extends NodeModel.withType(DataType<FileNode>()) {
   type: "file";
 
   constructor(data: FileNode) {
@@ -90,7 +90,7 @@ class FileNodeModel extends NodeModel.withType({} as FileNode) {
   }
 }
 
-class FolderNodeModel extends NodeModel.withType({} as FolderNode) {
+class FolderNodeModel extends NodeModel.withType(DataType<FolderNode>()) {
   type: "folder";
 
   constructor(data: FolderNode) {

@@ -89,12 +89,16 @@ export type DefaultData = {
   [x: string | number | symbol]: any;
 };
 
-export interface StoreParams<Models extends Record<string, typeof Model>> {
+export interface StoreParams<
+  Models extends Record<string, RetypedModelClass<typeof Model, any>>
+> {
   schemaVersion: number;
   models: Models;
 }
 
-export class Store<Models extends Record<string, typeof Model>> {
+export class Store<
+  Models extends Record<string, RetypedModelClass<typeof Model, any>>
+> {
   // declare readonly Data: {
   //   schemaVersion: number;
   //   data: {
@@ -203,6 +207,12 @@ export class Collection<ModelClass extends typeof Model> {
         this.instances[id] = this.model.create(val) as any;
       }
     }
+    keys(this.instances).forEach((id: any) => {
+      if (!data[id]) {
+        const instance = this.instances[id];
+        instance?.delete();
+      }
+    });
   }
 
   toJSON(): Record<string, ReturnType<InstanceType<ModelClass>["toJSON"]>> {
