@@ -49,51 +49,32 @@ const ChessGame = observer(() => {
     const symbol = getPieceSymbol(piece.type);
     return (
       <div
-        className={cn(
-          "w-full h-full flex items-center justify-center text-4xl",
-          piece.color === "white" ? "text-white/80" : "text-black"
-        )}
-        style={{ filter: "drop-shadow(1px 1px 0px rgba(255,255,255,0.5))" }}
+        className={cn("w-full h-full flex justify-center items-center p-3")}
+        style={{
+          filter: `${
+            piece.color === "black"
+              ? "invert(1) drop-shadow(1px 1px 0px rgba(255,255,255,0.5))"
+              : ""
+          }`,
+        }}
       >
-        {symbol}
-      </div>
-    );
-  };
-
-  const renderJail = (player: PlayerModel) => {
-    const capturedPieces = game.players
-      .find((p) => p.id !== player.id)!
-      .pieces.filter((p) => p.captured);
-
-    return (
-      <div className="flex flex-col items-center">
-        <div className="text-white mb-2">{player.color}'s Captures</div>
-        <div className="grid grid-cols-4 gap-1 bg-black/30 p-2 rounded">
-          {capturedPieces.map((piece) => (
-            <div
-              key={piece.id}
-              className="w-8 h-8 flex items-center justify-center bg-black/20"
-            >
-              {renderPiece(piece)}
-            </div>
-          ))}
-        </div>
+        <img src={`/pieces/${piece.type}.svg`} className="h-full" />
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="relative flex gap-4">
         <motion.div
           layout="position"
           style={{
-            alignSelf: game.currentPlayer.color === "white" ? "start" : "end",
+            alignSelf: game.currentPlayer.color === "white" ? "end" : "start",
           }}
           className="h-20 bg-white w-1 rounded-full"
         />
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-8 gap-[0px] max-w-screen">
+          <div className="grid grid-cols-8 gap-[0px] w-full max-w-xl rounded-xl overflow-hidden">
             {Array.from({ length: 8 }, (_, y) =>
               Array.from({ length: 8 }, (_, x) => {
                 const isLight = (x + y) % 2 === 0;
@@ -110,7 +91,7 @@ const ChessGame = observer(() => {
                   <div
                     key={`${x}-${y}`}
                     className={cn(
-                      "w-16 h-16 flex items-center justify-center cursor-pointer relative ring-inset",
+                      "aspect-[1] flex items-center justify-center cursor-pointer relative ring-inset",
                       isLight ? "bg-white/[5%]" : "bg-white/[9%]",
                       isSelected && "ring-1 ring-fuchsia-400",
                       isValidMove && "ring-1 ring-fuchsia-400/30"
