@@ -6,6 +6,7 @@ import { GameModel, PieceModel, PlayerModel, store } from "./models";
 import { observer } from "mobx-react-lite";
 import { cn } from "@/lib/utils";
 import { autorun } from "mobx";
+import { motion } from "framer-motion";
 
 const ChessGame = observer(() => {
   const [game] = useState<GameModel>(() => GameModel.initialize());
@@ -50,8 +51,9 @@ const ChessGame = observer(() => {
       <div
         className={cn(
           "w-full h-full flex items-center justify-center text-4xl",
-          piece.color === "white" ? "text-white" : "text-black"
+          piece.color === "white" ? "text-white/80" : "text-black"
         )}
+        style={{ filter: "drop-shadow(1px 1px 0px rgba(255,255,255,0.5))" }}
       >
         {symbol}
       </div>
@@ -81,15 +83,17 @@ const ChessGame = observer(() => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="fixed w-full h-full -z-10 bg-zinc-900" />
-
-      <div className="flex gap-8">
-        {/* Black's jail (showing white captured pieces) */}
-        {renderJail(game.players.find((p) => p.color === "black")!)}
-
-        <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg">
-          <div className="grid grid-cols-8 gap-0.5 bg-black/50">
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="relative flex gap-4">
+        <motion.div
+          layout="position"
+          style={{
+            alignSelf: game.currentPlayer.color === "white" ? "start" : "end",
+          }}
+          className="h-20 bg-white w-1 rounded-full"
+        />
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-8 gap-[0px] max-w-screen">
             {Array.from({ length: 8 }, (_, y) =>
               Array.from({ length: 8 }, (_, x) => {
                 const isLight = (x + y) % 2 === 0;
@@ -106,10 +110,10 @@ const ChessGame = observer(() => {
                   <div
                     key={`${x}-${y}`}
                     className={cn(
-                      "w-16 h-16 flex items-center justify-center cursor-pointer relative",
-                      isLight ? "bg-white/80" : "bg-gray-600/80",
-                      isSelected && "ring-4 ring-yellow-400",
-                      isValidMove && "ring-4 ring-green-400"
+                      "w-16 h-16 flex items-center justify-center cursor-pointer relative ring-inset",
+                      isLight ? "bg-white/[5%]" : "bg-white/[9%]",
+                      isSelected && "ring-1 ring-fuchsia-400",
+                      isValidMove && "ring-1 ring-fuchsia-400/30"
                     )}
                     onClick={() => handleSquareClick(x, y)}
                   >
@@ -119,38 +123,27 @@ const ChessGame = observer(() => {
               })
             )}
           </div>
-
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-white text-lg">
-              Current Turn: {game.currentPlayer.color}
-              {game.currentPlayer.isInCheck && " (Check!)"}
-              {game.isOver && ` - ${game.winner?.color} wins!`}
-            </div>
-            <div className="space-x-2">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  store.history.undo();
-                  game.selectPiece(null);
-                }}
-              >
-                Undo
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  store.history.redo();
-                  game.selectPiece(null);
-                }}
-              >
-                Redo
-              </Button>
-            </div>
+          <div className="flex w-full justify-between items-center">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                store.history.undo();
+                game.selectPiece(null);
+              }}
+            >
+              Undo
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                store.history.redo();
+                game.selectPiece(null);
+              }}
+            >
+              Redo
+            </Button>
           </div>
         </div>
-
-        {/* White's jail (showing black captured pieces) */}
-        {renderJail(game.players.find((p) => p.color === "white")!)}
       </div>
     </div>
   );

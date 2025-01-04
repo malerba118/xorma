@@ -312,9 +312,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
       };
 
       while (this.isValidPosition(newPos)) {
-        const piece = PieceModel.getAll().find(
-          (p) => p.position.x === newPos.x && p.position.y === newPos.y
-        );
+        const piece = this.player.game.getPieceAtPosition(newPos);
 
         if (!piece) {
           moves.push(newPos);
@@ -413,9 +411,7 @@ export class PawnModel extends PieceModel {
     const forward = { x: this.position.x, y: this.position.y + direction };
     if (
       this.isValidPosition(forward) &&
-      !PieceModel.getAll().find(
-        (p) => p.position.x === forward.x && p.position.y === forward.y
-      )
+      !this.player.game.getPieceAtPosition(forward)
     ) {
       moves.push(forward);
 
@@ -425,13 +421,7 @@ export class PawnModel extends PieceModel {
           x: this.position.x,
           y: this.position.y + 2 * direction,
         };
-        if (
-          !PieceModel.getAll().find(
-            (p) =>
-              p.position.x === doubleForward.x &&
-              p.position.y === doubleForward.y
-          )
-        ) {
+        if (!this.player.game.getPieceAtPosition(doubleForward)) {
           moves.push(doubleForward);
         }
       }
@@ -445,9 +435,7 @@ export class PawnModel extends PieceModel {
 
     for (const capture of captures) {
       if (this.isValidPosition(capture)) {
-        const piece = PieceModel.getAll().find(
-          (p) => p.position.x === capture.x && p.position.y === capture.y
-        );
+        const piece = this.player.game.getPieceAtPosition(capture);
         if (piece && piece.color !== this.color) {
           moves.push(capture);
         }
@@ -496,9 +484,7 @@ export class KnightModel extends PieceModel {
       };
 
       if (this.isValidPosition(newPos)) {
-        const piece = PieceModel.getAll().find(
-          (p) => p.position.x === newPos.x && p.position.y === newPos.y
-        );
+        const piece = this.player.game.getPieceAtPosition(newPos);
         if (!piece || piece.color !== this.color) {
           moves.push(newPos);
         }
@@ -565,9 +551,7 @@ export class KingModel extends PieceModel {
       }))
       .filter((pos) => {
         if (!this.isValidPosition(pos)) return false;
-        const piece = PieceModel.getAll().find(
-          (p) => p.position.x === pos.x && p.position.y === pos.y
-        );
+        const piece = this.player.game.getPieceAtPosition(pos);
         return !piece || piece.color !== this.color;
       });
   }
