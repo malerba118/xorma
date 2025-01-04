@@ -9,10 +9,8 @@ import {
 } from "mobx";
 import { HistoryManager } from "./history";
 
-export type TransactionResult<ReturnValue> = {
-  committed: boolean;
-  error?: Error;
-  data?: ReturnValue;
+export type BatchOptions = {
+  revertChanges: () => void;
 };
 
 // 1) Helper type to extract toJSON() return shape from a Model
@@ -125,6 +123,7 @@ export class Store<
     });
     this.schemaVersion = params.schemaVersion;
     makeObservable(this, {
+      batch: action,
       loadJSON: action,
     });
     this._history.onChange((ev) => {
@@ -134,22 +133,22 @@ export class Store<
     });
   }
 
-  batch<ReturnVal>(callback: () => ReturnVal): TransactionResult<ReturnVal> {
+  batch<ReturnVal>(callback: (options: BatchOptions) => ReturnVal): ReturnVal {
     const snapshot = this.toJSON();
-    let result: TransactionResult<ReturnVal> = {
-      committed: false,
+    let shouldRevert = false;
+    const revertChanges = () => {
+      shouldRevert = true;
     };
-    runInAction(() => {
-      try {
-        result.data = callback();
-        result.committed = true;
-      } catch (err: any) {
+    try {
+      let returnValue = callback({ revertChanges });
+      return returnValue;
+    } catch (err: any) {
+      throw err;
+    } finally {
+      if (shouldRevert) {
         this.loadJSON(snapshot);
-        result.error = new Error(err?.message || "Batched call aborted");
-        result.committed = false;
       }
-    });
-    return result;
+    }
   }
 
   history = {

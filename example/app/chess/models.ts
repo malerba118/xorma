@@ -282,27 +282,15 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
   }
 
   wouldMoveResultInCheck(to: Position): boolean {
-    // Save original state
-    const originalPosition = this.position;
-    const capturedPiece = this.player.game.getPieceAtPosition(to);
-    const wasCaptured = capturedPiece?.captured ?? false;
-
-    try {
-      // Simulate the move
+    return store.batch((options) => {
+      options.revertChanges();
+      const capturedPiece = this.player.game.getPieceAtPosition(to);
       this.position = to;
       if (capturedPiece) {
         capturedPiece.captured = true;
       }
-
-      // Check if we would be in check after this move
       return this.player.isInCheck;
-    } finally {
-      // Always restore the original state
-      this.position = originalPosition;
-      if (capturedPiece) {
-        capturedPiece.captured = wasCaptured;
-      }
-    }
+    });
   }
 
   get validNextPositions(): Position[] {
@@ -327,42 +315,34 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
 
     const capturedPiece = this.player.game.getPieceAtPosition(to);
 
-    const result = store.batch(() => {
-      if (capturedPiece) {
-        capturedPiece.captured = true;
-      }
+    if (capturedPiece) {
+      capturedPiece.captured = true;
+    }
 
-      var move = MoveModel.create({
-        id: `move-${Date.now()}`,
-        game_id: this.player.game_id,
-        player_id: this.player.id,
-        piece_id: this.id,
-        from: { ...this.position },
-        to: { ...to },
-        captured_piece_id: capturedPiece?.id,
-        timestamp: Date.now(),
-      });
-
-      this.position = to;
-      this.has_moved = true;
-
-      if (this.player.isInCheck) {
-        throw new Error("Player cannot be in check after their move");
-      }
-
-      this.player.game.switchPlayer();
-
-      return move;
+    var move = MoveModel.create({
+      id: `move-${Date.now()}`,
+      game_id: this.player.game_id,
+      player_id: this.player.id,
+      piece_id: this.id,
+      from: { ...this.position },
+      to: { ...to },
+      captured_piece_id: capturedPiece?.id,
+      timestamp: Date.now(),
     });
 
-    return result.data || null;
+    this.position = to;
+    this.has_moved = true;
+
+    this.player.game.switchPlayer();
+
+    return move;
   }
 
   get isSelected() {
     return this.player.game.selected_piece_id === this.id;
   }
 
-  protected isValidPosition(pos: Position): boolean {
+  protected isInBounds(pos: Position): boolean {
     return pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8;
   }
 
@@ -375,7 +355,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
         y: this.position.y + dir.y,
       };
 
-      while (this.isValidPosition(newPos)) {
+      while (this.isInBounds(newPos)) {
         const piece = this.player.game.getPieceAtPosition(newPos);
 
         if (!piece) {
@@ -473,7 +453,7 @@ export class PawnModel extends PieceModel {
     // Forward move
     const forward = { x: this.position.x, y: this.position.y + direction };
     if (
-      this.isValidPosition(forward) &&
+      this.isInBounds(forward) &&
       !this.player.game.getPieceAtPosition(forward)
     ) {
       moves.push(forward);
@@ -497,7 +477,7 @@ export class PawnModel extends PieceModel {
     ];
 
     for (const capture of captures) {
-      if (this.isValidPosition(capture)) {
+      if (this.isInBounds(capture)) {
         const piece = this.player.game.getPieceAtPosition(capture);
         if (piece && piece.color !== this.color) {
           moves.push(capture);
@@ -546,7 +526,7 @@ export class KnightModel extends PieceModel {
         y: this.position.y + move.y,
       };
 
-      if (this.isValidPosition(newPos)) {
+      if (this.isInBounds(newPos)) {
         const piece = this.player.game.getPieceAtPosition(newPos);
         if (!piece || piece.color !== this.color) {
           moves.push(newPos);
@@ -613,7 +593,7 @@ export class KingModel extends PieceModel {
         y: this.position.y + dir.y,
       }))
       .filter((pos) => {
-        if (!this.isValidPosition(pos)) return false;
+        if (!this.isInBounds(pos)) return false;
         const piece = this.player.game.getPieceAtPosition(pos);
         return !piece || piece.color !== this.color;
       });
@@ -623,6 +603,7 @@ export class KingModel extends PieceModel {
 export const store = new Store({
   schemaVersion: 0,
   models: {
+    BaseModel,
     GameModel,
     PlayerModel,
     PieceModel,

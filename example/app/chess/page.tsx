@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { GameModel, PieceModel, PlayerModel, store } from "./models";
 import { observer } from "mobx-react-lite";
 import { cn } from "@/lib/utils";
-import { action, autorun } from "mobx";
 import { motion } from "framer-motion";
 import { Position } from "./types";
 
@@ -88,15 +87,6 @@ const ChessGame = observer(() => {
       alert(`${game.winner.color} wins!`);
     }
   }, [game.winner]);
-
-  useEffect(() => {
-    autorun(() => {
-      for (const player of game.players) {
-        console.log({ isInCheck: player.isInCheck });
-        console.log({ isInCheckMate: player.isInCheckMate });
-      }
-    });
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
