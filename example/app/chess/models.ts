@@ -63,7 +63,10 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
 
   getPieceAtPosition(pos: Position) {
     return this.pieces.find(
-      (piece) => piece.position.x === pos.x && piece.position.y === pos.y
+      (piece) =>
+        !piece.captured &&
+        piece.position.x === pos.x &&
+        piece.position.y === pos.y
     );
   }
 
@@ -249,6 +252,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
       has_moved: observable.ref,
       player: computed,
       validNextPositions: computed,
+      isSelected: computed,
       canMove: computed,
       move: action,
     });
@@ -291,11 +295,13 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     this.position = to;
     this.has_moved = true;
 
-    // Switch turns
-    const game = this.player.game;
-    game.current_player_id = this.player.opponent.id;
+    this.player.game.switchPlayer();
 
     return move;
+  }
+
+  get isSelected() {
+    return this.player.game.selected_piece_id === this.id;
   }
 
   protected isValidPosition(pos: Position): boolean {
