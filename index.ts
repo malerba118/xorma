@@ -9,6 +9,12 @@ import {
 } from "mobx";
 import { HistoryManager } from "./history";
 
+export type TransactionResult<ReturnValue> = {
+  committed: boolean;
+  error?: Error;
+  data?: ReturnValue;
+};
+
 // 1) Helper type to extract toJSON() return shape from a Model
 export type BaseModelJSON<BC extends typeof Model> = BC extends {
   prototype: { toJSON: () => infer R };
@@ -126,6 +132,24 @@ export class Store<
         this.loadJSON(ev.item);
       }
     });
+  }
+
+  batch<ReturnVal>(callback: () => ReturnVal): TransactionResult<ReturnVal> {
+    const snapshot = this.toJSON();
+    let result: TransactionResult<ReturnVal> = {
+      committed: false,
+    };
+    runInAction(() => {
+      try {
+        result.data = callback();
+        result.committed = true;
+      } catch (err: any) {
+        this.loadJSON(snapshot);
+        result.error = new Error(err?.message || "Batched call aborted");
+        result.committed = false;
+      }
+    });
+    return result;
   }
 
   history = {

@@ -41,7 +41,6 @@ const BoardPosition = observer(
   ({ pos, game }: { pos: Position; game: GameModel }) => {
     const isLight = (pos.x + pos.y) % 2 === 0;
     const piece = game.getPieceAtPosition(pos);
-    const isSelected = piece?.id === game.selected_piece_id;
     const isValidMove = game.selectedPiece?.validNextPositions.some(
       (p) => p.x === pos.x && p.y === pos.y
     );
@@ -83,6 +82,12 @@ const ChessGame = observer(() => {
   useEffect(() => {
     store.history.commit();
   }, []);
+
+  useEffect(() => {
+    if (game.winner) {
+      alert(`${game.winner.color} wins!`);
+    }
+  }, [game.winner]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">

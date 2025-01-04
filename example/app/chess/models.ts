@@ -54,7 +54,11 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
   }
 
   get winner(): PlayerModel | null {
-    return this.players.find((p) => !p.isInCheckMate) ?? null;
+    return this.loser?.opponent ?? null;
+  }
+
+  get loser(): PlayerModel | null {
+    return this.players.find((p) => p.isInCheckMate) ?? null;
   }
 
   get pieces() {
@@ -277,27 +281,35 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
 
     const capturedPiece = this.player.game.getPieceAtPosition(to);
 
-    if (capturedPiece) {
-      capturedPiece.captured = true;
-    }
+    const result = store.batch(() => {
+      if (capturedPiece) {
+        capturedPiece.captured = true;
+      }
 
-    const move = MoveModel.create({
-      id: `move-${Date.now()}`,
-      game_id: this.player.game_id,
-      player_id: this.player.id,
-      piece_id: this.id,
-      from: { ...this.position },
-      to: { ...to },
-      captured_piece_id: capturedPiece?.id,
-      timestamp: Date.now(),
+      var move = MoveModel.create({
+        id: `move-${Date.now()}`,
+        game_id: this.player.game_id,
+        player_id: this.player.id,
+        piece_id: this.id,
+        from: { ...this.position },
+        to: { ...to },
+        captured_piece_id: capturedPiece?.id,
+        timestamp: Date.now(),
+      });
+
+      this.position = to;
+      this.has_moved = true;
+
+      if (this.player.isInCheck) {
+        throw new Error("Player cannot be in check after their move");
+      }
+
+      this.player.game.switchPlayer();
+
+      return move;
     });
 
-    this.position = to;
-    this.has_moved = true;
-
-    this.player.game.switchPlayer();
-
-    return move;
+    return result.data || null;
   }
 
   get isSelected() {
