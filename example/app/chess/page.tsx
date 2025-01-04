@@ -89,6 +89,15 @@ const ChessGame = observer(() => {
     }
   }, [game.winner]);
 
+  useEffect(() => {
+    autorun(() => {
+      for (const player of game.players) {
+        console.log({ isInCheck: player.isInCheck });
+        console.log({ isInCheckMate: player.isInCheckMate });
+      }
+    });
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="relative flex gap-4">

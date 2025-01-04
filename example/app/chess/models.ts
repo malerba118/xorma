@@ -1,5 +1,11 @@
 import { DataType, Model, Store } from "xorm";
-import { makeObservable, observable, action, computed } from "mobx";
+import {
+  makeObservable,
+  observable,
+  action,
+  computed,
+  runInAction,
+} from "mobx";
 import {
   BaseData,
   Game,
@@ -32,6 +38,7 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
       selectedPiece: computed,
       isOver: computed,
       winner: computed,
+      loser: computed,
       selectPiece: action,
       switchPlayer: action,
     });
@@ -213,16 +220,19 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
     const king = this.pieces.find((p) => p.type === "king");
     if (!king) return false;
 
-    return this.opponent.pieces.some((piece) =>
-      piece.validNextPositions.some(
-        (pos) => pos.x === king.position.x && pos.y === king.position.y
-      )
-    );
+    return this.opponent.pieces.some((piece) => {
+      if (piece.captured) return false;
+      return piece
+        .getBasicMoves()
+        .some((pos) => pos.x === king.position.x && pos.y === king.position.y);
+    });
   }
 
   get isInCheckMate(): boolean {
     if (!this.isInCheck) return false;
-    return this.pieces.every((piece) => piece.validNextPositions.length === 0);
+    return this.pieces
+      .filter((piece) => !piece.captured)
+      .every((piece) => piece.validNextPositions.length === 0);
   }
 
   toJSON(): Player {
@@ -259,6 +269,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
       isSelected: computed,
       canMove: computed,
       move: action,
+      wouldMoveResultInCheck: action,
     });
   }
 
@@ -266,8 +277,43 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     return PlayerModel.getById(this.player_id)!;
   }
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     return [];
+  }
+
+  wouldMoveResultInCheck(to: Position): boolean {
+    // Save original state
+    const originalPosition = this.position;
+    const capturedPiece = this.player.game.getPieceAtPosition(to);
+    const wasCaptured = capturedPiece?.captured ?? false;
+
+    try {
+      // Simulate the move
+      this.position = to;
+      if (capturedPiece) {
+        capturedPiece.captured = true;
+      }
+
+      // Check if we would be in check after this move
+      return this.player.isInCheck;
+    } finally {
+      // Always restore the original state
+      this.position = originalPosition;
+      if (capturedPiece) {
+        capturedPiece.captured = wasCaptured;
+      }
+    }
+  }
+
+  get validNextPositions(): Position[] {
+    if (!this.player.isTurn) return [];
+    let positions: Position[] = [];
+    runInAction(() => {
+      positions = this.getBasicMoves().filter(
+        (pos) => !this.wouldMoveResultInCheck(pos)
+      );
+    });
+    return positions;
   }
 
   get canMove(): boolean {
@@ -420,10 +466,9 @@ export class MoveModel extends BaseModel.withType(DataType<Move>()) {
 export class PawnModel extends PieceModel {
   type: "pawn" = "pawn";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const moves: Position[] = [];
     const direction = this.color === "white" ? -1 : 1;
-    const startRank = this.color === "white" ? 6 : 1;
 
     // Forward move
     const forward = { x: this.position.x, y: this.position.y + direction };
@@ -467,7 +512,7 @@ export class PawnModel extends PieceModel {
 export class RookModel extends PieceModel {
   type: "rook" = "rook";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
@@ -482,7 +527,7 @@ export class RookModel extends PieceModel {
 export class KnightModel extends PieceModel {
   type: "knight" = "knight";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const moves: Position[] = [];
     const knightMoves = [
       { x: 2, y: 1 },
@@ -516,7 +561,7 @@ export class KnightModel extends PieceModel {
 export class BishopModel extends PieceModel {
   type: "bishop" = "bishop";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const directions = [
       { x: 1, y: 1 },
       { x: 1, y: -1 },
@@ -531,7 +576,7 @@ export class BishopModel extends PieceModel {
 export class QueenModel extends PieceModel {
   type: "queen" = "queen";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
@@ -550,7 +595,7 @@ export class QueenModel extends PieceModel {
 export class KingModel extends PieceModel {
   type: "king" = "king";
 
-  get validNextPositions(): Position[] {
+  getBasicMoves(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
