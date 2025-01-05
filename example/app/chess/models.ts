@@ -39,7 +39,7 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
       isOver: computed,
       winner: computed,
       loser: computed,
-      selectPiece: action,
+      setSelectedPieceId: action,
       switchPlayer: action,
     });
   }
@@ -85,7 +85,7 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
     this.currentPlayerId = this.currentPlayer.opponent.id;
   }
 
-  selectPiece(pieceId: string | null) {
+  setSelectedPieceId(pieceId: string | null) {
     this.selectedPieceId = pieceId;
   }
 

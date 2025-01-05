@@ -58,15 +58,15 @@ const BoardPosition = observer(
           if (game.selectedPiece) {
             if (game.selectedPiece.move(pos)) {
               store.history.commit();
-              game.selectPiece(null);
+              game.setSelectedPieceId(null);
               return;
             }
           }
           if (clickedPiece?.player.isTurn) {
-            game.selectPiece(clickedPiece.id);
+            game.setSelectedPieceId(clickedPiece.id);
             return;
           }
-          game.selectPiece(null);
+          game.setSelectedPieceId(null);
         }}
         aria-label={`Board position ${pos.x}, ${pos.y}`}
       >
@@ -117,7 +117,7 @@ const ChessGame = observer(() => {
               variant="secondary"
               onClick={() => {
                 store.history.undo();
-                game.selectPiece(null);
+                game.setSelectedPieceId(null);
               }}
             >
               Undo
@@ -126,7 +126,7 @@ const ChessGame = observer(() => {
               variant="secondary"
               onClick={() => {
                 store.history.redo();
-                game.selectPiece(null);
+                game.setSelectedPieceId(null);
               }}
             >
               Redo
