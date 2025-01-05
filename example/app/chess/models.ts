@@ -24,15 +24,15 @@ class BaseModel extends Model.withType(DataType<BaseData>()) {
 }
 
 export class GameModel extends BaseModel.withType(DataType<Game>()) {
-  current_player_id: string;
-  selected_piece_id: string | null = null;
+  currentPlayerId: string;
+  selectedPieceId: string | null = null;
 
   constructor(data: Game) {
     super(data);
     this.loadJSON(data);
     makeObservable(this, {
-      current_player_id: observable,
-      selected_piece_id: observable,
+      currentPlayerId: observable,
+      selectedPieceId: observable,
       players: computed,
       currentPlayer: computed,
       selectedPiece: computed,
@@ -45,15 +45,15 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
   }
 
   get players(): PlayerModel[] {
-    return PlayerModel.getAll().filter((p) => p.game_id === this.id);
+    return PlayerModel.getAll().filter((p) => p.gameId === this.id);
   }
 
   get currentPlayer(): PlayerModel {
-    return this.players.find((p) => p.id === this.current_player_id)!;
+    return this.players.find((p) => p.id === this.currentPlayerId)!;
   }
 
   get selectedPiece() {
-    return this.pieces.find((p) => p.id === this.selected_piece_id) || null;
+    return this.pieces.find((p) => p.id === this.selectedPieceId) || null;
   }
 
   get isOver(): boolean {
@@ -82,24 +82,24 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
   }
 
   switchPlayer() {
-    this.current_player_id = this.currentPlayer.opponent.id;
+    this.currentPlayerId = this.currentPlayer.opponent.id;
   }
 
   selectPiece(pieceId: string | null) {
-    this.selected_piece_id = pieceId;
+    this.selectedPieceId = pieceId;
   }
 
   toJSON(): Game {
     return {
       id: this.id,
-      current_player_id: this.current_player_id,
-      selected_piece_id: this.selected_piece_id,
+      current_player_id: this.currentPlayerId,
+      selected_piece_id: this.selectedPieceId,
     };
   }
 
   loadJSON(data: Game) {
-    this.current_player_id = data.current_player_id;
-    this.selected_piece_id = data.selected_piece_id;
+    this.currentPlayerId = data.current_player_id;
+    this.selectedPieceId = data.selected_piece_id;
   }
 
   static initialize(): GameModel {
@@ -179,7 +179,7 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
 }
 
 export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
-  game_id: string;
+  gameId: string;
   color: PieceColor;
 
   constructor(data: Player) {
@@ -201,19 +201,19 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
   }
 
   get pieces(): PieceModel[] {
-    return PieceModel.getAll().filter((p) => p.player_id === this.id);
+    return PieceModel.getAll().filter((p) => p.playerId === this.id);
   }
 
   get moves(): MoveModel[] {
-    return MoveModel.getAll().filter((m) => m.player_id === this.id);
+    return MoveModel.getAll().filter((m) => m.playerId === this.id);
   }
 
   get game(): GameModel {
-    return GameModel.getById(this.game_id)!;
+    return GameModel.getById(this.gameId)!;
   }
 
   get isTurn(): boolean {
-    return this.game.current_player_id === this.id;
+    return this.game.currentPlayerId === this.id;
   }
 
   get isInCheck(): boolean {
@@ -238,24 +238,24 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
   toJSON(): Player {
     return {
       id: this.id,
-      game_id: this.game_id,
+      game_id: this.gameId,
       color: this.color,
     };
   }
 
   loadJSON(data: Player) {
-    this.game_id = data.game_id;
+    this.gameId = data.game_id;
     this.color = data.color;
   }
 }
 
 export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
   type: PieceType;
-  player_id: string;
+  playerId: string;
   color: PieceColor;
   position: Position;
   captured: boolean;
-  has_moved: boolean;
+  hasMoved: boolean;
 
   constructor(data: Piece) {
     super(data);
@@ -263,25 +263,24 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     makeObservable(this, {
       position: observable.ref,
       captured: observable.ref,
-      has_moved: observable.ref,
+      hasMoved: observable.ref,
       player: computed,
       validNextPositions: computed,
       isSelected: computed,
       canMove: computed,
       move: action,
-      wouldMoveResultInCheck: action,
     });
   }
 
   get player(): PlayerModel {
-    return PlayerModel.getById(this.player_id)!;
+    return PlayerModel.getById(this.playerId)!;
   }
 
   getBasicMoves(): Position[] {
     return [];
   }
 
-  wouldMoveResultInCheck(to: Position): boolean {
+  protected wouldMoveResultInCheck(to: Position): boolean {
     return store.batch((options) => {
       options.revertChanges();
       const capturedPiece = this.player.game.getPieceAtPosition(to);
@@ -321,7 +320,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
 
     var move = MoveModel.create({
       id: `move-${Date.now()}`,
-      game_id: this.player.game_id,
+      game_id: this.player.gameId,
       player_id: this.player.id,
       piece_id: this.id,
       from: { ...this.position },
@@ -331,7 +330,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     });
 
     this.position = to;
-    this.has_moved = true;
+    this.hasMoved = true;
 
     this.player.game.switchPlayer();
 
@@ -339,7 +338,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
   }
 
   get isSelected() {
-    return this.player.game.selected_piece_id === this.id;
+    return this.player.game.selectedPieceId === this.id;
   }
 
   protected isInBounds(pos: Position): boolean {
@@ -380,32 +379,32 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
   toJSON(): Piece {
     return {
       id: this.id,
-      player_id: this.player_id,
+      player_id: this.playerId,
       type: this.type,
       color: this.color,
       position: this.position,
       captured: this.captured,
-      has_moved: this.has_moved,
+      has_moved: this.hasMoved,
     };
   }
 
   loadJSON(data: Piece) {
     this.type = data.type;
-    this.player_id = data.player_id;
+    this.playerId = data.player_id;
     this.color = data.color;
     this.position = data.position;
     this.captured = data.captured;
-    this.has_moved = data.has_moved;
+    this.hasMoved = data.has_moved;
   }
 }
 
 export class MoveModel extends BaseModel.withType(DataType<Move>()) {
-  game_id: string;
-  player_id: string;
-  piece_id: string;
+  gameId: string;
+  playerId: string;
+  pieceId: string;
   from: Position;
   to: Position;
-  captured_piece_id?: string;
+  capturedPieceId?: string;
   timestamp: number;
 
   constructor(data: Move) {
@@ -414,30 +413,30 @@ export class MoveModel extends BaseModel.withType(DataType<Move>()) {
     makeObservable(this, {
       from: observable.ref,
       to: observable.ref,
-      captured_piece_id: observable,
+      capturedPieceId: observable,
     });
   }
 
   toJSON(): Move {
     return {
       id: this.id,
-      game_id: this.game_id,
-      player_id: this.player_id,
-      piece_id: this.piece_id,
+      game_id: this.gameId,
+      player_id: this.playerId,
+      piece_id: this.pieceId,
       from: this.from,
       to: this.to,
-      captured_piece_id: this.captured_piece_id,
+      captured_piece_id: this.capturedPieceId,
       timestamp: this.timestamp,
     };
   }
 
   loadJSON(data: Move) {
-    this.game_id = data.game_id;
-    this.player_id = data.player_id;
-    this.piece_id = data.piece_id;
+    this.gameId = data.game_id;
+    this.playerId = data.player_id;
+    this.pieceId = data.piece_id;
     this.from = data.from;
     this.to = data.to;
-    this.captured_piece_id = data.captured_piece_id;
+    this.capturedPieceId = data.captured_piece_id;
     this.timestamp = data.timestamp;
   }
 }
@@ -459,7 +458,7 @@ export class PawnModel extends PieceModel {
       moves.push(forward);
 
       // Double move from starting position
-      if (!this.has_moved) {
+      if (!this.hasMoved) {
         const doubleForward = {
           x: this.position.x,
           y: this.position.y + 2 * direction,

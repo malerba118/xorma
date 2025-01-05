@@ -19,7 +19,7 @@ const Piece = observer(({ piece }: { piece: PieceModel }) => {
       )}
     >
       {piece.isSelected && (
-        <div className="absolute inset-0 bg-fuchsia-400/50" />
+        <div className="absolute inset-0 bg-fuchsia-400/60" />
       )}
       <img
         src={`/pieces/${piece.type}.svg`}
@@ -45,12 +45,13 @@ const BoardPosition = observer(
     );
 
     return (
-      <div
+      <button
         key={`${pos.x}-${pos.y}`}
         className={cn(
-          "aspect-[1] flex items-center justify-center cursor-pointer relative ring-inset",
-          isLight ? "bg-white/[5%]" : "bg-white/[9%]",
-          isValidMove && "ring-1 ring-fuchsia-400/30"
+          "aspect-[1] flex items-center justify-center cursor-pointer relative ring-inset transition-colors duration-100",
+          isLight
+            ? "bg-white/[5%] hover:bg-white/[13.5%]"
+            : "bg-white/[10%] hover:bg-white/[13.5%]"
         )}
         onClick={() => {
           const clickedPiece = game.getPieceAtPosition(pos);
@@ -67,10 +68,15 @@ const BoardPosition = observer(
           }
           game.selectPiece(null);
         }}
+        aria-label={`Board position ${pos.x}, ${pos.y}`}
       >
-        {isValidMove && <div className="absolute inset-0 bg-fuchsia-400/5" />}
         {piece && <Piece piece={piece} />}
-      </div>
+        {isValidMove && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-1/2 h-1/2 ring-2 ring-fuchsia-400/60 rounded-full" />
+          </div>
+        )}
+      </button>
     );
   }
 );
