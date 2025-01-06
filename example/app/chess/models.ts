@@ -34,6 +34,8 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
       currentPlayerId: observable,
       selectedPieceId: observable,
       players: computed,
+      boardPieces: computed,
+      capturedPieces: computed,
       currentPlayer: computed,
       selectedPiece: computed,
       isOver: computed,
@@ -53,11 +55,11 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
   }
 
   get selectedPiece() {
-    return this.pieces.find((p) => p.id === this.selectedPieceId) || null;
+    return this.boardPieces.find((p) => p.id === this.selectedPieceId) || null;
   }
 
   get isOver(): boolean {
-    return this.players.some((p) => p.isInCheckMate);
+    return !!this.winner;
   }
 
   get winner(): PlayerModel | null {
@@ -68,16 +70,17 @@ export class GameModel extends BaseModel.withType(DataType<Game>()) {
     return this.players.find((p) => p.isInCheckMate) ?? null;
   }
 
-  get pieces() {
-    return this.players.flatMap((player) => player.pieces);
+  get boardPieces() {
+    return this.players.flatMap((player) => player.boardPieces);
+  }
+
+  get capturedPieces() {
+    return this.players.flatMap((player) => player.capturedPieces);
   }
 
   getPieceAtPosition(pos: Position) {
-    return this.pieces.find(
-      (piece) =>
-        !piece.captured &&
-        piece.position.x === pos.x &&
-        piece.position.y === pos.y
+    return this.boardPieces.find(
+      (piece) => piece.position.x === pos.x && piece.position.y === pos.y
     );
   }
 
@@ -187,7 +190,8 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
     this.loadJSON(data);
     makeObservable(this, {
       opponent: computed,
-      pieces: computed,
+      boardPieces: computed,
+      capturedPieces: computed,
       moves: computed,
       game: computed,
       isTurn: computed,
@@ -200,8 +204,16 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
     return this.game.players.find((p) => p.id !== this.id)!;
   }
 
-  get pieces(): PieceModel[] {
-    return PieceModel.getAll().filter((p) => p.playerId === this.id);
+  get boardPieces(): PieceModel[] {
+    return PieceModel.getAll().filter(
+      (p) => p.playerId === this.id && !p.captured
+    );
+  }
+
+  get capturedPieces(): PieceModel[] {
+    return PieceModel.getAll().filter(
+      (p) => p.playerId === this.id && p.captured
+    );
   }
 
   get moves(): MoveModel[] {
@@ -217,22 +229,21 @@ export class PlayerModel extends BaseModel.withType(DataType<Player>()) {
   }
 
   get isInCheck(): boolean {
-    const king = this.pieces.find((p) => p.type === "king");
+    const king = this.boardPieces.find((p) => p.type === "king");
     if (!king) return false;
 
-    return this.opponent.pieces.some((piece) => {
-      if (piece.captured) return false;
-      return piece
-        .getBasicMoves()
-        .some((pos) => pos.x === king.position.x && pos.y === king.position.y);
+    return this.opponent.boardPieces.some((piece) => {
+      return piece.candidateNextPositions.some(
+        (pos) => pos.x === king.position.x && pos.y === king.position.y
+      );
     });
   }
 
   get isInCheckMate(): boolean {
     if (!this.isInCheck) return false;
-    return this.pieces
-      .filter((piece) => !piece.captured)
-      .every((piece) => piece.validNextPositions.length === 0);
+    return this.boardPieces.every(
+      (piece) => piece.validNextPositions.length === 0
+    );
   }
 
   toJSON(): Player {
@@ -276,7 +287,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     return PlayerModel.getById(this.playerId)!;
   }
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     return [];
   }
 
@@ -296,7 +307,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
     if (!this.player.isTurn) return [];
     let positions: Position[] = [];
     runInAction(() => {
-      positions = this.getBasicMoves().filter(
+      positions = this.candidateNextPositions.filter(
         (pos) => !this.wouldMoveResultInCheck(pos)
       );
     });
@@ -445,7 +456,7 @@ export class MoveModel extends BaseModel.withType(DataType<Move>()) {
 export class PawnModel extends PieceModel {
   type: "pawn" = "pawn";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const moves: Position[] = [];
     const direction = this.color === "white" ? -1 : 1;
 
@@ -491,7 +502,7 @@ export class PawnModel extends PieceModel {
 export class RookModel extends PieceModel {
   type: "rook" = "rook";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
@@ -506,7 +517,7 @@ export class RookModel extends PieceModel {
 export class KnightModel extends PieceModel {
   type: "knight" = "knight";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const moves: Position[] = [];
     const knightMoves = [
       { x: 2, y: 1 },
@@ -540,7 +551,7 @@ export class KnightModel extends PieceModel {
 export class BishopModel extends PieceModel {
   type: "bishop" = "bishop";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const directions = [
       { x: 1, y: 1 },
       { x: 1, y: -1 },
@@ -555,7 +566,7 @@ export class BishopModel extends PieceModel {
 export class QueenModel extends PieceModel {
   type: "queen" = "queen";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
@@ -574,7 +585,7 @@ export class QueenModel extends PieceModel {
 export class KingModel extends PieceModel {
   type: "king" = "king";
 
-  getBasicMoves(): Position[] {
+  get candidateNextPositions(): Position[] {
     const directions = [
       { x: 0, y: 1 },
       { x: 0, y: -1 },
