@@ -1,3 +1,5 @@
+@import url("https://api.fontshare.com/v2/css?f[]=clash-grotesk@400,500,600,700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -81,6 +83,10 @@ body {
 @layer base {
   * {
     @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-block: 8rem;
   }
   body {
     @apply bg-background text-foreground;

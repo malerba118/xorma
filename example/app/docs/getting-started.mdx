@@ -1,0 +1,443 @@
+### Getting Started
+
+To install xorm, you'll also need to install mobx.
+
+```tsx
+npm i xorm mobx
+```
+
+Next, you'll need to define some models.
+
+Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. You'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
+
+```tsx
+import { DataType, Model } from "xorm";
+
+type User = {
+  id: string;
+  first_name: string;
+  last_name: string;
+};
+
+type Project = {
+  id: string;
+  name: string;
+};
+
+type Task = {
+  id: string;
+  title: string;
+  project_id: string;
+  creator_id: string;
+  assignee_id: string | null;
+  created_at: number;
+};
+
+class BaseModel extends Model.withType(DataType<{ id: string }>()) {
+  static idSelector(data: { id: string }) {
+    return data.id;
+  }
+}
+
+class UserModel extends BaseModel.withType(DataType<User>()) {
+  firstName: string;
+  lastName: string;
+
+  constructor(data: User) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      firstName: observable,
+      lastName: observable,
+      name: computed,
+      createdTasks: computed,
+      assignedTasks: computed,
+    });
+  }
+
+  get name(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  get createdTasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.creatorId === this.id);
+  }
+
+  get assignedTasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.assigneeId === this.id);
+  }
+
+  loadJSON(data: User) {
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+  }
+
+  toJSON(): User {
+    return {
+      id: this.id,
+      first_name: this.firstName,
+      last_name: this.lastName,
+    };
+  }
+}
+
+class ProjectModel extends BaseModel.withType(DataType<Project>()) {
+  name: string;
+
+  constructor(data: Project) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      name: observable,
+      tasks: computed,
+    });
+  }
+
+  get tasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.projectId === this.id);
+  }
+
+  toJSON(): Project {
+    return {
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  loadJSON(data: Project) {
+    this.name = data.name;
+  }
+}
+
+class TaskModel extends BaseModel.withType(DataType<Task>()) {
+  title: string;
+  projectId: string;
+  creatorId: string;
+  assigneeId: string | null;
+  createdAt: number;
+
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      title: observable,
+      assigneeId: observable,
+      creator: computed,
+      assignee: computed,
+    });
+  }
+
+  get creator(): UserModel {
+    return UserModel.getById(this.creatorId)!;
+  }
+
+  get assignee(): UserModel | null {
+    return this.assigneeId ? UserModel.getById(this.assigneeId)! : null;
+  }
+
+  toJSON(): Task {
+    return {
+      id: this.id,
+      title: this.title,
+      project_id: this.projectId,
+      creator_id: this.creatorId,
+      assignee_id: this.assigneeId,
+      created_at: this.createdAt,
+    };
+  }
+
+  loadJSON(data: Task) {
+    this.title = data.title;
+    this.projectId = data.project_id;
+    this.creatorId = data.creator_id;
+    this.assigneeId = data.assignee_id;
+    this.createdAt = data.created_at;
+  }
+}
+```
+
+```tsx live
+import { DataType, Model, Store } from "xorm";
+import { makeObservable, observable, computed } from "mobx";
+import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+
+type User = {
+  id: string;
+  first_name: string;
+  last_name: string;
+};
+
+type Project = {
+  id: string;
+  name: string;
+};
+
+type Task = {
+  id: string;
+  title: string;
+  project_id: string;
+  creator_id: string;
+  assignee_id: string | null;
+  created_at: number;
+};
+
+class BaseModel extends Model.withType(DataType<{ id: string }>()) {
+  static idSelector(data: { id: string }) {
+    return data.id;
+  }
+}
+
+class UserModel extends BaseModel.withType(DataType<User>()) {
+  firstName: string;
+  lastName: string;
+
+  constructor(data: User) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      firstName: observable,
+      lastName: observable,
+      name: computed,
+      createdTasks: computed,
+      assignedTasks: computed,
+    });
+  }
+
+  get name(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  get createdTasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.creatorId === this.id);
+  }
+
+  get assignedTasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.assigneeId === this.id);
+  }
+
+  toJSON(): User {
+    return {
+      id: this.id,
+      first_name: this.firstName,
+      last_name: this.lastName,
+    };
+  }
+
+  loadJSON(data: User) {
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+  }
+}
+
+class ProjectModel extends BaseModel.withType(DataType<Project>()) {
+  name: string;
+
+  constructor(data: Project) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      name: observable,
+      tasks: computed,
+    });
+  }
+
+  get tasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.projectId === this.id);
+  }
+
+  toJSON(): Project {
+    return {
+      id: this.id,
+      name: this.name,
+    };
+  }
+
+  loadJSON(data: Project) {
+    this.name = data.name;
+  }
+}
+
+class TaskModel extends BaseModel.withType(DataType<Task>()) {
+  title: string;
+  projectId: string;
+  creatorId: string;
+  assigneeId: string | null;
+  createdAt: number;
+
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      title: observable,
+      assigneeId: observable,
+      creator: computed,
+      assignee: computed,
+    });
+  }
+
+  get creator(): UserModel {
+    return UserModel.getById(this.creatorId)!;
+  }
+
+  get assignee(): UserModel | null {
+    return this.assigneeId ? UserModel.getById(this.assigneeId)! : null;
+  }
+
+  toJSON(): Task {
+    return {
+      id: this.id,
+      title: this.title,
+      project_id: this.projectId,
+      creator_id: this.creatorId,
+      assignee_id: this.assigneeId,
+      created_at: this.createdAt,
+    };
+  }
+
+  loadJSON(data: Task) {
+    this.title = data.title;
+    this.projectId = data.project_id;
+    this.creatorId = data.creator_id;
+    this.assigneeId = data.assignee_id;
+    this.createdAt = data.created_at;
+  }
+}
+
+const store = new Store({
+  schemaVersion: 0,
+  models: {
+    BaseModel,
+    UserModel,
+    TaskModel,
+  },
+});
+
+// Initialize some sample data
+const initializeProject = () => {
+  const user1 = UserModel.create({
+    id: "user1",
+    first_name: "John",
+    last_name: "Doe",
+  });
+
+  const user2 = UserModel.create({
+    id: "user2",
+    first_name: "Jane",
+    last_name: "Smith",
+  });
+
+  const project = ProjectModel.create({
+    id: "project1",
+    name: "My project",
+  });
+
+  TaskModel.create({
+    id: "task1",
+    title: "Complete Project Proposal",
+    project_id: project.id,
+    creator_id: user1.id,
+    assignee_id: user2.id,
+    created_at: Date.now(),
+  });
+
+  TaskModel.create({
+    id: "task2",
+    title: "Review Code",
+    project_id: project.id,
+    creator_id: user2.id,
+    assignee_id: user1.id,
+    created_at: Date.now(),
+  });
+
+  return project;
+};
+
+const project = initializeProject();
+
+const Tasks = observer(() => {
+  return (
+    <div className="p-4 flex flex-col gap-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          TaskModel.create({
+            id: Math.random().toString(36).slice(2),
+            title: formData.get("task"),
+            project_id: project.id,
+            creator_id: "user1",
+            assignee_id: null,
+            created_at: Date.now(),
+          });
+          e.currentTarget.reset();
+        }}
+        className="flex gap-4"
+      >
+        <Input name="task" placeholder="Task..." required />
+        <Button>Create</Button>
+      </form>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Task</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Assignee</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {project.tasks.map((task) => (
+            <TableRow key={task.id}>
+              <TableCell>{task.title}</TableCell>
+              <TableCell>{null}</TableCell>
+              <TableCell className="text-right">
+                {task.assignee?.name}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+});
+
+export default function App() {
+  return <Tasks />;
+}
+```
+
+And here's a readonly codeblock
+
+```tsx
+import { Model, Store } from "xorm";
+
+class TaskModel extends Model {
+  name: string;
+
+  constructor(data) {
+    super(data);
+    this.name = data.name;
+  }
+}
+
+const store = new Store({ schemaVersion: 0, models: { TaskModel } });
+
+const task1 = TaskModel.create({ id: "123", name: "do something" });
+
+export default function App() {
+  return (
+    <ul>
+      <li>{task1.name}</li>
+    </ul>
+  );
+}
+```

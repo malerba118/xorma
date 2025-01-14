@@ -1,6 +1,18 @@
-"use client";
+### Models
 
+To install xorm, you'll also need to install mobx.
+
+```tsx
+npm i xorm mobx
+```
+
+Next, you'll need to define some models and a store. Below is a simple task app to demostrate how this setup looks.
+
+```tsx live
+import { DataType, Model, Store } from "xorm";
+import { makeObservable, observable, computed } from "mobx";
 import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,9 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { DataType, Model, Store } from "xorm";
-import { makeObservable, observable, computed, action } from "mobx";
 import { Input } from "@/components/ui/input";
 
 type User = {
@@ -197,22 +206,24 @@ const project = initializeProject();
 
 const Tasks = observer(() => {
   return (
-    <div className="max-w-4xl mx-auto py-24">
+    <div className="p-4 flex flex-col gap-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          const formData = new FormData(e.currentTarget);
           TaskModel.create({
             id: Math.random().toString(36).slice(2),
-            title: "foo",
+            title: formData.get("task"),
             project_id: project.id,
             creator_id: "user1",
             assignee_id: null,
             created_at: Date.now(),
           });
+          e.currentTarget.reset();
         }}
-        className="flex justify-between items-center mb-8"
+        className="flex gap-4"
       >
-        <Input placeholder="Task..." />
+        <Input name="task" placeholder="Task..." required />
         <Button>Create</Button>
       </form>
       <Table>
@@ -220,15 +231,15 @@ const Tasks = observer(() => {
           <TableRow>
             <TableHead>Task</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="w-48 text-right px-5">Assignee</TableHead>
+            <TableHead className="text-right">Assignee</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {project.tasks.map((task) => (
-            <TableRow className="hover:!bg-transparent">
-              <TableCell className="font-medium">{task.title}</TableCell>
+            <TableRow key={task.id}>
+              <TableCell>{task.title}</TableCell>
               <TableCell>{null}</TableCell>
-              <TableCell className="flex justify-end">
+              <TableCell className="text-right">
                 {task.assignee?.name}
               </TableCell>
             </TableRow>
@@ -242,3 +253,31 @@ const Tasks = observer(() => {
 export default function App() {
   return <Tasks />;
 }
+```
+
+And here's a readonly codeblock
+
+```tsx
+import { Model, Store } from "xorm";
+
+class TaskModel extends Model {
+  name: string;
+
+  constructor(data) {
+    super(data);
+    this.name = data.name;
+  }
+}
+
+const store = new Store({ schemaVersion: 0, models: { TaskModel } });
+
+const task1 = TaskModel.create({ id: "123", name: "do something" });
+
+export default function App() {
+  return (
+    <ul>
+      <li>{task1.name}</li>
+    </ul>
+  );
+}
+```
