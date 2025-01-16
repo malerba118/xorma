@@ -10,7 +10,7 @@ Once installed, you'll need to define some models.
 
 Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. This means you'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
 
-It's an annoying bit of boilerplate, but once we've set up our models in this way, we can augment them with all sorts of getters and setters to do complex logic an our behalf. Also take note of the fields that we make observable and computed. This is a necessary step to make our fields reactive.
+It's an annoying bit of boilerplate, but once we've set up our models in this way, we can augment them with all sorts of getters and setters to do complex logic on our behalf. Also take note of the fields that we make observable and computed. This is a necessary step to make our fields reactive.
 
 Reactive fields are powerful because whenever the value of a reactive field is changed, our React components will automatically rerender, receiving the newly assigned value.
 

@@ -64,7 +64,7 @@ export const Docs = ({ children }: any) => {
                     <motion.div
                       layoutId="ambient-light"
                       layout
-                      className="absolute left-[-1px] -top-3 -bottom-3 h-auto w-[6px] blur-md z-10"
+                      className="absolute left-[-3px] -top-3 -bottom-3 h-auto w-[6px] blur-[12px] z-10"
                       style={{
                         background: `radial-gradient(closest-side ellipse at center, white 0, transparent 100%)`,
                       }}
@@ -72,7 +72,7 @@ export const Docs = ({ children }: any) => {
                   )}
                   <motion.span
                     animate={{
-                      opacity: activeSectionId === section.id ? 0.95 : 0.5,
+                      opacity: activeSectionId === section.id ? 0.9 : 0.5,
                     }}
                   >
                     {section.label}
