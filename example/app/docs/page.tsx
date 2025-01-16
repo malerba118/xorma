@@ -5,7 +5,7 @@ export const DocsPage = () => {
   return (
     <div>
       {sections.map((section) => (
-        <DocsSection key={section.id} id={section.id}>
+        <DocsSection key={section.id} id={section.id} className="mb-16">
           <section.Markdown />
         </DocsSection>
       ))}

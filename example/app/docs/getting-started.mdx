@@ -1,4 +1,4 @@
-### Getting Started
+## Getting Started
 
 To install xorm, you'll also need to install mobx.
 
@@ -6,9 +6,13 @@ To install xorm, you'll also need to install mobx.
 npm i xorm mobx
 ```
 
-Next, you'll need to define some models.
+Once installed, you'll need to define some models.
 
-Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. You'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
+Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. This means you'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
+
+It's an annoying bit of boilerplate, but once we've set up our models in this way, we can augment them with all sorts of getters and setters to do complex logic an our behalf. Also take note of the fields that we make observable and computed. This is a necessary step to make our fields reactive.
+
+Reactive fields are powerful because whenever the value of a reactive field is changed, our React components will automatically rerender, receiving the newly assigned value.
 
 ```tsx
 import { DataType, Model } from "xorm";
@@ -155,6 +159,25 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
   }
 }
 ```
+
+Next up, we need to connect our models to a store. The store will manage our model instances in a centralized place and will give us behavior such as undo/redo.
+
+```tsx
+import { Store } from "xorm";
+
+/* ... */
+
+const store = new Store({
+  schemaVersion: 0,
+  models: {
+    BaseModel,
+    UserModel,
+    TaskModel,
+  },
+});
+```
+
+Here's a live example that ties together the setup we just ran through.
 
 ```tsx live
 import { DataType, Model, Store } from "xorm";
@@ -412,32 +435,5 @@ const Tasks = observer(() => {
 
 export default function App() {
   return <Tasks />;
-}
-```
-
-And here's a readonly codeblock
-
-```tsx
-import { Model, Store } from "xorm";
-
-class TaskModel extends Model {
-  name: string;
-
-  constructor(data) {
-    super(data);
-    this.name = data.name;
-  }
-}
-
-const store = new Store({ schemaVersion: 0, models: { TaskModel } });
-
-const task1 = TaskModel.create({ id: "123", name: "do something" });
-
-export default function App() {
-  return (
-    <ul>
-      <li>{task1.name}</li>
-    </ul>
-  );
 }
 ```

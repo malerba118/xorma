@@ -1,0 +1,33 @@
+## Concepts
+
+This section covers some of the core concepts of xorm.
+
+### Store
+
+In xorm, your state is held in a centralized store which you can think of as a reactive in-memory database.
+
+<img
+  src="/store-structure.png"
+  className="w-full mb-6 bg-white/[0.5%] rounded-xl"
+/>
+
+Each model in this store has a corresponding collection and each collection holds model instances.
+
+Model instances are special however, because only one instance will ever exist per id.
+
+Consider the following scenario.
+
+```tsx
+const task1 = TaskModel.create({ id: "123", task: "Remove dead code" });
+const task2 = TaskModel.create({ id: "123", task: "Refactor state" });
+const task3 = TaskModel.create({ id: "456", task: "Add fullscreen dialog" });
+console.log(task1.task); // "Refactor state"
+console.log(task2.task); // "Refactor state"
+console.log(task3.task); // "Add fullscreen dialog"
+console.log(task1 === task2); // true
+console.log(task2 === task3); // false
+```
+
+Note that `task1` and `task2` refer to the same model instance. This is because xorm guarantees that only one model instance exists per id.
+
+So when we attempt to create `task2`, what actually happens under the hood is xorm sees the existing `TaskModel` instance associated with id `123` and updates the instance's data by calling `instance.loadJSON({ id: "123", task: "Refactor state" })`.
