@@ -1,9 +1,10 @@
 import { DataType, Model, Store } from "xorm";
-import { makeObservable, observable, computed, action } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 
 type User = {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
 };
 
 type Project = {
@@ -13,30 +14,37 @@ type Project = {
 
 type Task = {
   id: string;
-  title: string;
+  name: string;
   project_id: string;
   creator_id: string;
   assignee_id: string | null;
   created_at: number;
 };
 
-class BaseModel extends Model.withType(DataType<{ id: string }>()) {
+export class BaseModel extends Model.withType(DataType<{ id: string }>()) {
   static idSelector(data: { id: string }) {
     return data.id;
   }
 }
 
 export class UserModel extends BaseModel.withType(DataType<User>()) {
-  name: string;
+  firstName: string;
+  lastName: string;
 
   constructor(data: User) {
     super(data);
     this.loadJSON(data);
     makeObservable(this, {
-      name: observable,
+      firstName: observable,
+      lastName: observable,
+      name: computed,
       createdTasks: computed,
       assignedTasks: computed,
     });
+  }
+
+  get name(): string {
+    return `${this.firstName} ${this.lastName}`;
   }
 
   get createdTasks(): TaskModel[] {
@@ -47,52 +55,22 @@ export class UserModel extends BaseModel.withType(DataType<User>()) {
     return TaskModel.getAll().filter((task) => task.assigneeId === this.id);
   }
 
+  loadJSON(data: User) {
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+  }
+
   toJSON(): User {
     return {
       id: this.id,
-      name: this.name,
+      first_name: this.firstName,
+      last_name: this.lastName,
     };
-  }
-
-  loadJSON(data: User) {
-    this.name = data.name;
-  }
-}
-
-class TaskCreationFormManager {
-  open: boolean;
-  task: string;
-  assigneeId: string | null;
-
-  constructor() {
-    makeObservable(this, {
-      open: observable.ref,
-      task: observable.ref,
-      assigneeId: observable.ref,
-      setOpen: action,
-      setTask: action,
-      setAssigneeId: action,
-    });
-  }
-
-  setOpen(open: boolean) {
-    this.open = open;
-  }
-
-  setTask(task: string) {
-    this.task = task;
-  }
-
-  setAssigneeId(assigneeId: string | null) {
-    this.assigneeId = assigneeId;
   }
 }
 
 export class ProjectModel extends BaseModel.withType(DataType<Project>()) {
   name: string;
-  forms = {
-    taskCreation: new TaskCreationFormManager(),
-  };
 
   constructor(data: Project) {
     super(data);
@@ -120,7 +98,7 @@ export class ProjectModel extends BaseModel.withType(DataType<Project>()) {
 }
 
 export class TaskModel extends BaseModel.withType(DataType<Task>()) {
-  title: string;
+  name: string;
   projectId: string;
   creatorId: string;
   assigneeId: string | null;
@@ -130,7 +108,7 @@ export class TaskModel extends BaseModel.withType(DataType<Task>()) {
     super(data);
     this.loadJSON(data);
     makeObservable(this, {
-      title: observable,
+      name: observable,
       assigneeId: observable,
       creator: computed,
       assignee: computed,
@@ -148,7 +126,7 @@ export class TaskModel extends BaseModel.withType(DataType<Task>()) {
   toJSON(): Task {
     return {
       id: this.id,
-      title: this.title,
+      name: this.name,
       project_id: this.projectId,
       creator_id: this.creatorId,
       assignee_id: this.assigneeId,
@@ -157,7 +135,7 @@ export class TaskModel extends BaseModel.withType(DataType<Task>()) {
   }
 
   loadJSON(data: Task) {
-    this.title = data.title;
+    this.name = data.name;
     this.projectId = data.project_id;
     this.creatorId = data.creator_id;
     this.assigneeId = data.assignee_id;
@@ -169,6 +147,7 @@ export const store = new Store({
   schemaVersion: 0,
   models: {
     BaseModel,
+    ProjectModel,
     UserModel,
     TaskModel,
   },

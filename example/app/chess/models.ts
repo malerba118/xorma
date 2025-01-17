@@ -292,8 +292,7 @@ export class PieceModel extends BaseModel.withType(DataType<Piece>()) {
   }
 
   protected wouldMoveResultInCheck(to: Position): boolean {
-    return store.batch((options) => {
-      options.revertChanges();
+    return store.sandbox(() => {
       const capturedPiece = this.player.game.getPieceAtPosition(to);
       this.position = to;
       if (capturedPiece) {

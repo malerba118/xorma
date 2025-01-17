@@ -30,7 +30,7 @@ type Project = {
 
 type Task = {
   id: string;
-  title: string;
+  name: string;
   project_id: string;
   creator_id: string;
   assignee_id: string | null;
@@ -114,7 +114,7 @@ class ProjectModel extends BaseModel.withType(DataType<Project>()) {
 }
 
 class TaskModel extends BaseModel.withType(DataType<Task>()) {
-  title: string;
+  name: string;
   projectId: string;
   creatorId: string;
   assigneeId: string | null;
@@ -124,7 +124,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
     super(data);
     this.loadJSON(data);
     makeObservable(this, {
-      title: observable,
+      name: observable,
       assigneeId: observable,
       creator: computed,
       assignee: computed,
@@ -142,7 +142,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
   toJSON(): Task {
     return {
       id: this.id,
-      title: this.title,
+      name: this.name,
       project_id: this.projectId,
       creator_id: this.creatorId,
       assignee_id: this.assigneeId,
@@ -151,7 +151,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
   }
 
   loadJSON(data: Task) {
-    this.title = data.title;
+    this.name = data.name;
     this.projectId = data.project_id;
     this.creatorId = data.creator_id;
     this.assigneeId = data.assignee_id;
@@ -171,6 +171,7 @@ const store = new Store({
   schemaVersion: 0,
   models: {
     BaseModel,
+    ProjectModel,
     UserModel,
     TaskModel,
   },
@@ -207,7 +208,7 @@ type Project = {
 
 type Task = {
   id: string;
-  title: string;
+  name: string;
   project_id: string;
   creator_id: string;
   assignee_id: string | null;
@@ -291,7 +292,7 @@ class ProjectModel extends BaseModel.withType(DataType<Project>()) {
 }
 
 class TaskModel extends BaseModel.withType(DataType<Task>()) {
-  title: string;
+  name: string;
   projectId: string;
   creatorId: string;
   assigneeId: string | null;
@@ -301,7 +302,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
     super(data);
     this.loadJSON(data);
     makeObservable(this, {
-      title: observable,
+      name: observable,
       assigneeId: observable,
       creator: computed,
       assignee: computed,
@@ -319,7 +320,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
   toJSON(): Task {
     return {
       id: this.id,
-      title: this.title,
+      name: this.name,
       project_id: this.projectId,
       creator_id: this.creatorId,
       assignee_id: this.assigneeId,
@@ -328,7 +329,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
   }
 
   loadJSON(data: Task) {
-    this.title = data.title;
+    this.name = data.name;
     this.projectId = data.project_id;
     this.creatorId = data.creator_id;
     this.assigneeId = data.assignee_id;
@@ -340,6 +341,7 @@ const store = new Store({
   schemaVersion: 0,
   models: {
     BaseModel,
+    ProjectModel,
     UserModel,
     TaskModel,
   },
@@ -366,7 +368,7 @@ const initializeProject = () => {
 
   TaskModel.create({
     id: "task1",
-    title: "Complete Project Proposal",
+    name: "Complete Project Proposal",
     project_id: project.id,
     creator_id: user1.id,
     assignee_id: user2.id,
@@ -375,7 +377,7 @@ const initializeProject = () => {
 
   TaskModel.create({
     id: "task2",
-    title: "Review Code",
+    name: "Review Code",
     project_id: project.id,
     creator_id: user2.id,
     assignee_id: user1.id,
@@ -396,7 +398,7 @@ const Tasks = observer(() => {
           const formData = new FormData(e.currentTarget);
           TaskModel.create({
             id: Math.random().toString(36).slice(2),
-            title: formData.get("task"),
+            name: formData.get("task"),
             project_id: project.id,
             creator_id: "user1",
             assignee_id: null,
@@ -413,15 +415,13 @@ const Tasks = observer(() => {
         <TableHeader>
           <TableRow>
             <TableHead>Task</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead className="text-right">Assignee</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {project.tasks.map((task) => (
             <TableRow key={task.id}>
-              <TableCell>{task.title}</TableCell>
-              <TableCell>{null}</TableCell>
+              <TableCell>{task.name}</TableCell>
               <TableCell className="text-right">
                 {task.assignee?.name}
               </TableCell>

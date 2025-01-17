@@ -15,6 +15,8 @@ import * as xorm from "xorm";
 import * as table from "@/components/ui/table";
 import * as button from "@/components/ui/button";
 import * as input from "@/components/ui/input";
+import * as demoUtils from "@/app/docs/demo-utils";
+
 import { SandboxEditor } from "./editor";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,7 @@ const DEFAULT_SCOPE: Scope = {
     "@/components/ui/table": table,
     "@/components/ui/button": button,
     "@/components/ui/input": input,
+    "./demo-utils": demoUtils,
   },
 };
 

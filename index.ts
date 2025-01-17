@@ -80,8 +80,9 @@ export const diff = (
   };
 };
 
-export type BatchOptions = {
-  revertChanges: () => void;
+export type SandboxOptions = {
+  commit: () => void;
+  revert: () => void;
 };
 
 // 1) Helper type to extract toJSON() return shape from a Model
@@ -175,7 +176,7 @@ export class Store<
     });
     this.schemaVersion = params.schemaVersion;
     makeObservable(this, {
-      batch: action,
+      sandbox: action,
       loadJSON: action,
       loadPatch: action,
     });
@@ -186,14 +187,19 @@ export class Store<
     });
   }
 
-  batch<ReturnVal>(callback: (options: BatchOptions) => ReturnVal): ReturnVal {
+  sandbox<ReturnVal>(
+    callback: (options: SandboxOptions) => ReturnVal
+  ): ReturnVal {
     const snapshot = this.toJSON();
-    let shouldRevert = false;
-    const revertChanges = () => {
+    let shouldRevert = true;
+    const revert = () => {
       shouldRevert = true;
     };
+    const commit = () => {
+      shouldRevert = false;
+    };
     try {
-      let returnValue = callback({ revertChanges });
+      let returnValue = callback({ commit, revert });
       return returnValue;
     } catch (err: any) {
       throw err;

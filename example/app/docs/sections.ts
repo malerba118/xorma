@@ -1,15 +1,15 @@
-import GettingStarted from "./getting-started.mdx";
-import Concepts from "./concepts.mdx";
+import GettingStartedMdx from "./getting-started.mdx";
+import StoreMdx from "./store.mdx";
 
 export const sections = [
   {
     id: "getting-started",
     label: "Getting Started",
-    Markdown: GettingStarted,
+    Markdown: GettingStartedMdx,
   },
   {
-    id: "concepts",
-    label: "Concepts",
-    Markdown: Concepts,
+    id: "store",
+    label: "Store",
+    Markdown: StoreMdx,
   },
 ];

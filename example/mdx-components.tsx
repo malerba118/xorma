@@ -51,7 +51,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       if (!language) {
         return (
           <span
-            className="inline-block text-[rgb(162,168,242)] text-[14.5px] bg-white/10 rounded-md px-[6px] mx-1 py-[0px]"
+            className="inline-block text-[rgb(187,161,200)] text-[14.5px] bg-white/10 rounded-md px-[6px] mx-1 py-[0px] leading-7"
             style={{ fontFamily: "monospace" }}
           >
             {children}

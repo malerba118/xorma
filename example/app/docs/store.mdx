@@ -1,0 +1,172 @@
+## Store
+
+In xorm, your state is held in a centralized store which you can think of as a reactive in-memory database.
+
+<img
+  src="/store-structure.png"
+  className="w-full mb-6 bg-white/[0.5%] rounded-xl"
+/>
+
+Each model in this store has a corresponding collection and each collection holds model instances.
+
+Model instances are special however, because only one instance will ever exist per id.
+
+Consider the following scenario.
+
+```tsx live
+import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
+import { initModels } from "./demo-utils";
+
+const { UserModel } = initModels();
+
+const Demo = observer(() => {
+  const users = UserModel.getAll();
+
+  return (
+    <div className="overlay center gap-2">
+      {users.length === 0 && (
+        <Button
+          onClick={() => {
+            UserModel.create({
+              id: "user-1",
+              first_name: "Austin",
+              last_name: "Malerba",
+            });
+            UserModel.create({
+              id: "user-1", // note the duplicate id here
+              first_name: "Maxime",
+              last_name: "Heckel",
+            });
+            UserModel.create({
+              id: "user-3",
+              first_name: "Guillermo",
+              last_name: "Rauch",
+            });
+          }}
+        >
+          Init users
+        </Button>
+      )}
+      {users.map((user) => (
+        <p key={user.id}>{user.name}</p>
+      ))}
+    </div>
+  );
+});
+
+export default function App() {
+  return <Demo />;
+}
+```
+
+Note that even though we attempt to create 3 users, we only end up with 2. This is because xorm guarantees that only one model instance exists per id.
+
+So when we attempt to create the 2nd user, what actually happens under the hood is xorm sees the existing `UserModel` instance associated with id `user-1` and updates the instance's data by calling `instance.loadJSON({ id: "user-1", first_name: "Maxime", last_name: "Heckel" })`.
+
+### History
+
+The store also provides us a history api. At any point you can call `store.history.commit()` to push a snapshot onto the history stack.
+And then we can navigate forward and backward via `store.history.undo()` and `store.history.redo()`.
+
+```tsx live
+import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
+import { initModels } from "./demo-utils";
+
+const { UserModel, store } = initModels();
+
+store.history.commit();
+UserModel.create({
+  id: "user-1",
+  first_name: "Austin",
+  last_name: "Malerba",
+});
+store.history.commit();
+UserModel.create({
+  id: "user-2",
+  first_name: "Maxime",
+  last_name: "Heckel",
+});
+store.history.commit();
+UserModel.create({
+  id: "user-3",
+  first_name: "Guillermo",
+  last_name: "Rauch",
+});
+store.history.commit();
+
+const Demo = observer(() => {
+  const users = UserModel.getAll();
+
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <div className="hstack gap-2">
+        <Button onClick={() => store.history.undo()}>Undo</Button>
+        <Button onClick={() => store.history.redo()}>Redo</Button>
+      </div>
+      {users.map((user) => (
+        <p key={user.id}>{user.name}</p>
+      ))}
+    </div>
+  );
+});
+
+export default function App() {
+  return <Demo />;
+}
+```
+
+### Sandboxing
+
+Sometimes it's useful to dry-run some logic, but ultimately you don't want to change the store state.
+For example, consider a chess game in which you want to check a pieces valid moves. A natural way to check if
+a move is valid is simply to try moving the piece and then check whether the move puts the player in check.
+With sandboxing we can easily dry-run the move and revert the store to its previous state before we notify any observers of the changes.
+
+Below is a dumb example that demonstrates a less practical implementation of sandboxing.
+
+```tsx live
+import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
+import { initModels } from "./demo-utils";
+
+const { UserModel, store } = initModels();
+
+const Demo = observer(() => {
+  const users = UserModel.getAll();
+
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <div className="hstack gap-2">
+        <Button
+          onClick={() => {
+            store.sandbox(({ commit }) => {
+              const randomVal = Math.random();
+              UserModel.create({
+                id: `user-${randomVal}`,
+                first_name: "User",
+                last_name: randomVal,
+              });
+              if (randomVal > 0.5) {
+                commit();
+              }
+            });
+          }}
+        >
+          Maybe add user
+        </Button>
+      </div>
+      {users.map((user) => (
+        <p key={user.id}>{user.name}</p>
+      ))}
+    </div>
+  );
+});
+
+export default function App() {
+  return <Demo />;
+}
+```
+
+The callback passed to `store.sandbox(callback)` is run immediately and the default behavior is to revert, so there's no need to explicitly revert. However, if we wish to _commit_ the changes made within the sandbox callback, then we need to call commit.
