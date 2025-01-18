@@ -292,8 +292,7 @@ export class Collection<ModelClass extends typeof Model> {
     }
     keys(this.instances).forEach((id: any) => {
       if (!data[id]) {
-        const instance = this.instances[id];
-        instance?.delete();
+        delete this.instances[id];
       }
     });
   }
@@ -304,8 +303,7 @@ export class Collection<ModelClass extends typeof Model> {
     for (const [id, val] of Object.entries(data)) {
       // Handle deletion
       if (val === null) {
-        const instance = this.instances[id];
-        instance?.delete();
+        delete this.instances[id];
         continue;
       }
 
@@ -421,6 +419,7 @@ export class Model {
     this.id = this.getClass().idSelector(data);
     makeObservable(this, {
       isDeleted: computed,
+      isDetached: computed,
       delete: action,
       loadJSON: action,
     });
@@ -438,6 +437,12 @@ export class Model {
 
   get isDeleted() {
     return this._deleted;
+  }
+
+  /** An instance is detached when it is removed from the collection.
+   * This usually happens as a result of undo/redo. */
+  get isDetached() {
+    return !!this.getClass()._collection.instances[this.id];
   }
 
   toJSON(): DefaultData {

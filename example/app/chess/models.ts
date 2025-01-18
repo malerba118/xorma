@@ -1,4 +1,4 @@
-import { DataType, diff, Model, Store } from "xorm";
+import { DataType, diff, Model, Store } from "defrost";
 import {
   makeObservable,
   observable,

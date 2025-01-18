@@ -1,9 +1,9 @@
 ## Getting Started
 
-To install xorm, you'll also need to install mobx.
+To install defrost, you'll also need to install mobx.
 
 ```tsx
-npm i xorm mobx
+npm i defrost mobx
 ```
 
 Once installed, you'll need to define some models.
@@ -15,30 +15,36 @@ It's an annoying bit of boilerplate, but once we've set up our models in this wa
 Reactive fields are powerful because whenever the value of a reactive field is changed, our React components will automatically rerender, receiving the newly assigned value.
 
 ```tsx
-import { DataType, Model } from "xorm";
+import { DataType, Model } from "defrost";
 
-type User = {
+interface BaseData {
   id: string;
+}
+
+interface User extends BaseData {
   first_name: string;
   last_name: string;
-};
+}
 
-type Project = {
-  id: string;
+interface Project extends BaseData {
   name: string;
-};
+}
 
-type Task = {
-  id: string;
+interface Task extends BaseData {
   name: string;
   project_id: string;
   creator_id: string;
   assignee_id: string | null;
   created_at: number;
-};
+}
 
-class BaseModel extends Model.withType(DataType<{ id: string }>()) {
-  static idSelector(data: { id: string }) {
+class BaseModel extends Model.withType(DataType<BaseData>()) {
+  /**
+   *  This is actually the default implementation of idSelector so this step
+   *  is unnecessary, but you would want to override idSelector for any model
+   *  where the primary key field is something other than `id`.
+   */
+  static idSelector(data: BaseData) {
     return data.id;
   }
 }
@@ -163,7 +169,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
 Next up, we need to connect our models to a store. The store will manage our model instances in a centralized place and will give us behavior such as undo/redo.
 
 ```tsx
-import { Store } from "xorm";
+import { Store } from "defrost";
 
 /* ... */
 
@@ -181,7 +187,7 @@ const store = new Store({
 Here's a live example that ties together the setup we just ran through.
 
 ```tsx live
-import { DataType, Model, Store } from "xorm";
+import { DataType, Model, Store } from "defrost";
 import { makeObservable, observable, computed } from "mobx";
 import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
@@ -194,29 +200,36 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { DataType, Model } from "defrost";
 
-type User = {
+interface BaseData {
   id: string;
+}
+
+interface User extends BaseData {
   first_name: string;
   last_name: string;
-};
+}
 
-type Project = {
-  id: string;
+interface Project extends BaseData {
   name: string;
-};
+}
 
-type Task = {
-  id: string;
+interface Task extends BaseData {
   name: string;
   project_id: string;
   creator_id: string;
   assignee_id: string | null;
   created_at: number;
-};
+}
 
-class BaseModel extends Model.withType(DataType<{ id: string }>()) {
-  static idSelector(data: { id: string }) {
+class BaseModel extends Model.withType(DataType<BaseData>()) {
+  /**
+   *  This is actually the default implementation of idSelector so this step
+   *  is unnecessary, but you would want to override idSelector for any model
+   *  where the primary key field is something other than `id`.
+   */
+  static idSelector(data: BaseData) {
     return data.id;
   }
 }
@@ -249,17 +262,17 @@ class UserModel extends BaseModel.withType(DataType<User>()) {
     return TaskModel.getAll().filter((task) => task.assigneeId === this.id);
   }
 
+  loadJSON(data: User) {
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+  }
+
   toJSON(): User {
     return {
       id: this.id,
       first_name: this.firstName,
       last_name: this.lastName,
     };
-  }
-
-  loadJSON(data: User) {
-    this.firstName = data.first_name;
-    this.lastName = data.last_name;
   }
 }
 

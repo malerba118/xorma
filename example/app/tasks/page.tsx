@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DataType, Model, Store } from "xorm";
+import { DataType, Model, Store } from "defrost";
 import { makeObservable, observable, computed, action } from "mobx";
 import { Input } from "@/components/ui/input";
 
