@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import wallpaper from "@/public/wallpaper.png";
-import { DataType, Model, Store } from "defrost";
+import { DataType, Model, Store } from "xorma";
 
 interface Node {
   id: string;

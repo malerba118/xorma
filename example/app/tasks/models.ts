@@ -1,4 +1,4 @@
-import { DataType, Model, Store } from "defrost";
+import { DataType, Model, Store } from "xorma";
 import { computed, makeObservable, observable } from "mobx";
 
 type User = {

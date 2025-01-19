@@ -11,7 +11,7 @@ import * as mobx from "mobx";
 import * as mobxReact from "mobx-react";
 import * as framerMotion from "framer-motion";
 import * as tailwindColors from "tailwindcss/colors";
-import * as defrost from "defrost";
+import * as xorma from "xorma";
 import * as table from "@/components/ui/table";
 import * as button from "@/components/ui/button";
 import * as input from "@/components/ui/input";
@@ -31,7 +31,7 @@ const DEFAULT_SCOPE: Scope = {
     "framer-motion": framerMotion,
     mobx,
     "mobx-react": mobxReact,
-    defrost,
+    xorma,
     "@/components/ui/table": table,
     "@/components/ui/button": button,
     "@/components/ui/input": input,

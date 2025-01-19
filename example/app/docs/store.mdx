@@ -1,6 +1,6 @@
 ## Store
 
-In defrost, your state is held in a centralized store which you can think of as a reactive in-memory database.
+In xorma, your state is held in a centralized store which you can think of as a reactive in-memory database.
 
 <img
   src="/store-structure.png"
@@ -60,9 +60,9 @@ export default function App() {
 }
 ```
 
-Note that even though we attempt to create 3 users, we only end up with 2. This is because defrost guarantees that only one model instance exists per id.
+Note that even though we attempt to create 3 users, we only end up with 2. This is because xorma guarantees that only one model instance exists per id.
 
-So when we attempt to create the 2nd user, what actually happens under the hood is defrost sees the existing `UserModel` instance associated with id `user-1` and updates the instance's data by calling `instance.loadJSON({ id: "user-1", first_name: "Maxime", last_name: "Heckel" })`.
+So when we attempt to create the 2nd user, what actually happens under the hood is xorma sees the existing `UserModel` instance associated with id `user-1` and updates the instance's data by calling `instance.loadJSON({ id: "user-1", first_name: "Maxime", last_name: "Heckel" })`.
 
 ### History
 

@@ -1,21 +1,22 @@
 ## Getting Started
 
-To install defrost, you'll also need to install mobx.
+To install xorma, you'll also need to install mobx.
 
 ```tsx
-npm i defrost mobx
+npm i xorma mobx
 ```
 
 Once installed, you'll need to define some models.
 
-Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. This means you'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
+Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. To get started you'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
 
-It's an annoying bit of boilerplate, but once we've set up our models in this way, we can augment them with all sorts of getters and setters to do complex logic on our behalf. Also take note of the fields that we make observable and computed. This is a necessary step to make our fields reactive.
+Take note of the fields that we mark as observable and computed. This is a necessary step to make our fields reactive and is standard practice when [working with mobx](https://mobx.js.org/observable-state.html).
 
 Reactive fields are powerful because whenever the value of a reactive field is changed, our React components will automatically rerender, receiving the newly assigned value.
 
 ```tsx
-import { DataType, Model } from "defrost";
+import { DataType, Model } from "xorma";
+import { observable, computed } from "mobx";
 
 interface BaseData {
   id: string;
@@ -169,7 +170,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
 Next up, we need to connect our models to a store. The store will manage our model instances in a centralized place and will give us behavior such as undo/redo.
 
 ```tsx
-import { Store } from "defrost";
+import { Store } from "xorma";
 
 /* ... */
 
@@ -187,7 +188,7 @@ const store = new Store({
 Here's a live example that ties together the setup we just ran through.
 
 ```tsx live
-import { DataType, Model, Store } from "defrost";
+import { DataType, Model, Store } from "xorma";
 import { makeObservable, observable, computed } from "mobx";
 import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { DataType, Model } from "defrost";
+import { DataType, Model } from "xorma";
 
 interface BaseData {
   id: string;
