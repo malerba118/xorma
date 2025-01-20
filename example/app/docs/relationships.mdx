@@ -4,7 +4,7 @@ One of the powerful things you can do with xorma is create getters to access rel
 
 ### Foreign keys
 
-Given the following one-to-many relationship between projects and tasks, it's easy to look up relevant instances via the `Model.getById` and `Model.getAll` functions.
+Consider the following one-to-many relationship between projects and tasks. It's easy to look up relevant model instances via the `Model.getById` and `Model.getAll` functions.
 
 ```tsx
 import { Model, DataType } from "xorma";
@@ -71,9 +71,9 @@ class TaskModel extends Model.withType(DataType<Task>) {
 
 ### Embedded data
 
-Though xorma works best with highly normalized data, you can also use it to work with embedded data.
+In some cases, especially when working with nosql, our relationships are modeled as embedded subdocuments rather than through foreign keys.
 
-In the following example our projects and tasks are modeled slightly differently where tasks are a subcollection on projects.
+Xorma supports this as well, though it generally leads to a clunkier experience, requires more maintenance logic, and decreases the viability of optimizations like sending patches to the server.
 
 ```tsx
 import { Model, DataType } from "xorma";
@@ -140,6 +140,4 @@ class TaskModel extends Model.withType(DataType<Task>) {
 }
 ```
 
-However, it is only recommended to use xorma with embedded data if you're working with pre-existing data.
-
-If you're building a new application, it is highly recommended that you stick with relational data modeling (sql) over embedded data modeling (nosql).
+With that said, it is recommended when working with xorma that you model your data in a highly normalized way (sql), as opposed to a denormalized/embedded way (nosql).
