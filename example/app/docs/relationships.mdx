@@ -42,7 +42,7 @@ class ProjectModel extends Model.withType(DataType<Project>) {
    * that the logic inside of this getter will rarely run 🙌.
    */
   get tasks(): TaskModel[] {
-    return TaskModel.getAll().filter((task) => task.project_id === this.id);
+    return TaskModel.getAll().filter((task) => task.projectId === this.id);
   }
 
   /** ... */
@@ -68,3 +68,78 @@ class TaskModel extends Model.withType(DataType<Task>) {
   /** ... */
 }
 ```
+
+### Embedded data
+
+Though xorma works best with highly normalized data, you can also use it to work with embedded data.
+
+In the following example our projects and tasks are modeled slightly differently where tasks are a subcollection on projects.
+
+```tsx
+import { Model, DataType } from "xorma";
+import { makeObservable, computed } from "mobx";
+
+interface Project {
+  id: string;
+  name: string;
+  tasks: Task[];
+}
+
+interface Task {
+  id: string;
+  name: string;
+  done: boolean;
+}
+
+class ProjectModel extends Model.withType(DataType<Project>) {
+  /** ... */
+
+  tasks: TaskModel[];
+
+  constructor(data: Project) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      tasks: observable.shallow,
+    });
+  }
+
+  loadJSON(data: Project) {
+    /** ... */
+    this.tasks = data.tasks.map((task) => TaskModel.create(task));
+  }
+
+  toJSON() {
+    return {
+      /** ... */
+      tasks: this.tasks.map((task) => task.toJSON()),
+    };
+  }
+
+  /** ... */
+}
+
+class TaskModel extends Model.withType(DataType<Task>) {
+  /** ... */
+
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      project: computed,
+    });
+  }
+
+  get project(): ProjectModel {
+    return ProjectModel.getAll().find((project) =>
+      project.tasks.some((task) => task.id === this.id)
+    )!;
+  }
+
+  /** ... */
+}
+```
+
+However, it is only recommended to use xorma with embedded data if you're working with pre-existing data.
+
+If you're building a new application, it is highly recommended that you stick with relational data modeling (sql) over embedded data modeling (nosql).
