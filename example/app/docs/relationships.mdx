@@ -1,0 +1,70 @@
+## Relationships
+
+One of the powerful things you can do with xorma is create getters to access related model instances.
+
+### Foreign keys
+
+Given the following one-to-many relationship between projects and tasks, it's easy to look up relevant instances via the `Model.getById` and `Model.getAll` functions.
+
+```tsx
+import { Model, DataType } from "xorma";
+import { makeObservable, computed } from "mobx";
+
+interface Project {
+  id: string;
+  name: string;
+}
+
+interface Task {
+  id: string;
+  project_id: string;
+  name: string;
+  done: boolean;
+}
+
+class ProjectModel extends Model.withType(DataType<Project>) {
+  /** ... */
+
+  constructor(data: Project) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      tasks: computed,
+    });
+  }
+
+  /**
+   * At first glance this might seem unperformant, but as long as we make
+   * this field computed, its return value will be cached and it will only
+   * be re-evaluated when its observable dependencies change. In this case,
+   * the observable dependencies only include the array of TaskModel instances and
+   * this array will only change when we create/delete tasks. In practice this means
+   * that the logic inside of this getter will rarely run 🙌.
+   */
+  get tasks(): TaskModel[] {
+    return TaskModel.getAll().filter((task) => task.project_id === this.id);
+  }
+
+  /** ... */
+}
+
+class TaskModel extends Model.withType(DataType<Task>) {
+  /** ... */
+
+  projectId: string;
+
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      project: computed,
+    });
+  }
+
+  get project(): ProjectModel {
+    return ProjectModel.getById(this.projectId)!;
+  }
+
+  /** ... */
+}
+```
