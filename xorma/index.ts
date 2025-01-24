@@ -6,6 +6,7 @@ import {
   values,
   keys,
   computed,
+  reaction,
 } from "mobx";
 import { HistoryManager } from "./history";
 import { dereference, isDeepEqual, mapValues } from "./utils";
@@ -155,7 +156,7 @@ export type DefaultData = {
 export interface StoreParams<
   Models extends Record<string, RetypedModelClass<typeof Model, any>>
 > {
-  schemaVersion: number;
+  schemaVersion?: number;
   models: Models;
 }
 
@@ -166,7 +167,12 @@ export class Store<
   models: {
     [K in keyof Models]: Models[K];
   };
-  private _history = new HistoryManager();
+  private _history = new HistoryManager<{
+    schemaVersion: number;
+    data: {
+      [K in keyof Models]: ReturnType<Collection<Models[K]>["toJSON"]>;
+    };
+  }>();
 
   constructor(params: StoreParams<Models>) {
     this.models = params.models;
@@ -174,17 +180,21 @@ export class Store<
       model._store = this;
       model._collection = new Collection(model);
     });
-    this.schemaVersion = params.schemaVersion;
+    this.schemaVersion = params.schemaVersion ?? 0;
     makeObservable(this, {
       sandbox: action,
       loadJSON: action,
       loadPatch: action,
+      reset: action,
     });
-    this._history.onChange((ev) => {
-      if (ev.action === "undo" || ev.action === "redo") {
-        this.loadJSON(ev.item);
+    reaction(
+      () => this._history.activeItem,
+      (item) => {
+        if (item) {
+          this.loadJSON(item);
+        }
       }
-    });
+    );
   }
 
   sandbox<ReturnVal>(
@@ -212,16 +222,14 @@ export class Store<
   }
 
   reset() {
-    // Clear all instances from each model collection
     Object.values(this.models).forEach((model) => {
       model._collection.instances = {};
     });
-    // Clear history
-    this._history.clear();
+    this.history.clear();
   }
 
   history = {
-    _instance: this as Store<any>,
+    _instance: this as Store<Models>,
     commit({ replace = false }: { replace?: boolean } = {}) {
       if (replace) {
         return this._instance._history.replace(this._instance.toJSON());
@@ -230,10 +238,19 @@ export class Store<
       }
     },
     undo() {
-      this._instance._history.undo();
+      return this._instance._history.undo();
     },
     redo() {
-      this._instance._history.redo();
+      return this._instance._history.redo();
+    },
+    clear() {
+      return this._instance._history.clear();
+    },
+    get items() {
+      return this._instance._history.items;
+    },
+    get activeIndex() {
+      return this._instance._history.activeIndex;
     },
     get activeItem() {
       return this._instance._history.activeItem;
@@ -344,10 +361,14 @@ export type GetByIdOptions = {
 };
 
 export class Model {
-  id: string;
+  _id: string;
   _deleted: boolean = false;
   static _collection: Collection<any>;
   static _store: Store<any>;
+
+  get id(): string {
+    return this._id;
+  }
 
   getClass<T extends this>(this: T): ConstructorType<T> {
     return this.constructor as ConstructorType<T>;
@@ -425,8 +446,9 @@ export class Model {
   }
 
   constructor(data: any) {
-    this.id = this.getClass().idSelector(data);
+    this._id = this.getClass().idSelector(data);
     makeObservable(this, {
+      _id: observable,
       isDeleted: computed,
       isDetached: computed,
       delete: action,
@@ -440,7 +462,7 @@ export class Model {
 
   delete() {
     this._deleted = true;
-    delete this.getClass()._collection.instances[this.id];
+    delete this.getClass()._collection.instances[this._id];
     return this;
   }
 
@@ -451,7 +473,7 @@ export class Model {
   /** An instance is detached when it is removed from the collection.
    * This usually happens as a result of undo/redo. */
   get isDetached() {
-    return !!this.getClass()._collection.instances[this.id];
+    return !!this.getClass()._collection.instances[this._id];
   }
 
   toJSON(): DefaultData {

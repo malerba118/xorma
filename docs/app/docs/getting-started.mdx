@@ -175,7 +175,6 @@ import { Store } from "xorma";
 /* ... */
 
 const store = new Store({
-  schemaVersion: 0,
   models: {
     BaseModel,
     ProjectModel,
@@ -352,7 +351,6 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
 }
 
 const store = new Store({
-  schemaVersion: 0,
   models: {
     BaseModel,
     ProjectModel,

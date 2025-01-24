@@ -145,7 +145,6 @@ export const initModels = () => {
   }
 
   const store = new Store({
-    schemaVersion: 0,
     models: {
       BaseModel,
       ProjectModel,

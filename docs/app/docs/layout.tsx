@@ -36,8 +36,8 @@ export const Docs = ({ children }: any) => {
   return (
     <DocsContext.Provider value={{ activeSectionId, setActiveSectionId }}>
       <Toaster expand />
-      <div className="relative py-24 px-4 max-w-3xl mx-auto">
-        <div className="sticky top-24 w-full h-0">
+      <div className="relative py-2 md:py-24 px-5 max-w-3xl mx-auto">
+        <div className="sticky top-24 w-full h-0 invisible lg:visible">
           <div className="absolute -left-12 top-6 -translate-x-full stack gap-1.5 font-medium">
             <h3 className="font-heading font-semibold text-3xl">xorma</h3>
             <div className="relative -ml-3">

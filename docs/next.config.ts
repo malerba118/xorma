@@ -3,6 +3,15 @@ import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/docs",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 /** @type {import('next').NextConfig} */
@@ -11,6 +20,7 @@ const withMDX = createMDX({
   options: {
     rehypePlugins: [
       [
+        // @ts-ignore
         "rehype-mdx-code-props",
         {
           tagName: "code",
