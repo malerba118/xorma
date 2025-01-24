@@ -107,7 +107,7 @@ export default function App() {
 }
 ```
 
-An example of a more complex hierarchy would be a file viewer. You could imagine the model hierarchy for a file viewer to resemble the following.
+An example of a more complex hierarchy would be a file viewer. You could imagine the model hierarchy for a file viewer might resemble the following.
 
 ```tsx
 import { Model, DataType } from "xorma";
@@ -152,4 +152,4 @@ class FolderModel extends NodeModel.withType(DataType<Folder>()) {
 }
 ```
 
-And then this gives us a place to put all of our file-system business logic without mucking up our components.
+This would give us a place to put all of our file-system business logic without mucking up our components.

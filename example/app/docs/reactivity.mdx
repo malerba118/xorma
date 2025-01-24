@@ -98,7 +98,6 @@ import { useEffect } from "react";
 import { makeObservable, observable, action, reaction } from "mobx";
 import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 class Counter {
@@ -146,12 +145,7 @@ const AutoCount = observer(() => {
 });
 
 export default function App() {
-  return (
-    <>
-      <AutoCount />
-      <Toaster expand />
-    </>
-  );
+  return <AutoCount />;
 }
 ```
 

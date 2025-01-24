@@ -4,6 +4,7 @@ import StoreMdx from "./store.mdx";
 import RelationshipsMdx from "./relationships.mdx";
 import InheritanceMdx from "./inheritance.mdx";
 import ReactivityMdx from "./reactivity.mdx";
+import ExamplesMdx from "./examples.mdx";
 
 export const sections = [
   {
@@ -35,5 +36,10 @@ export const sections = [
     id: "inheritance",
     label: "Inheritance",
     Markdown: InheritanceMdx,
+  },
+  {
+    id: "examples",
+    label: "Examples",
+    Markdown: ExamplesMdx,
   },
 ];

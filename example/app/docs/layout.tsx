@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, memo, Suspense, useContext, useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
 // import Models from "./models.mdx";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -34,6 +35,7 @@ export const Docs = ({ children }: any) => {
 
   return (
     <DocsContext.Provider value={{ activeSectionId, setActiveSectionId }}>
+      <Toaster expand />
       <div className="relative py-24 px-4 max-w-3xl mx-auto">
         <div className="sticky top-24 w-full h-0">
           <div className="absolute -left-12 top-6 -translate-x-full stack gap-1.5 font-medium">
@@ -41,7 +43,7 @@ export const Docs = ({ children }: any) => {
             <div className="relative -ml-3">
               <LineMask
                 className="absolute h-auto -top-0.5 -bottom-0.5 left-[-1px] bg-border w-[1px]"
-                positions={[0, 0.2, 0.8, 1]}
+                positions={[0, 0.08, 0.92, 1]}
                 opacities={[0, 1, 1, 0]}
                 direction="to-bottom"
               />
@@ -72,8 +74,9 @@ export const Docs = ({ children }: any) => {
                   )}
                   <motion.span
                     initial={{ opacity: 0.5 }}
+                    whileHover={{ opacity: 0.8 }}
                     animate={{
-                      opacity: activeSectionId === section.id ? 0.9 : 0.5,
+                      opacity: activeSectionId === section.id ? 0.95 : 0.5,
                     }}
                   >
                     {section.label}
