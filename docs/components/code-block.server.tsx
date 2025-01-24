@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/css";
 import React from "react";
 // import houston from "shiki/themes/poimandres.mjs";
 // import houston from "shiki/themes/vesper.mjs";

@@ -1,4 +1,4 @@
-import { cn } from "../../../lib/utils";
+import { cn } from "../../../utils/css";
 import { Mask, MaskProps, masks } from "./mask";
 
 export interface LineMaskProps extends Omit<MaskProps, "image"> {

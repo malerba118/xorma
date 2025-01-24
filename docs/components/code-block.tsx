@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/css";
 import React, { useEffect, useState } from "react";
 import { bundledLanguages, createHighlighter } from "shiki";
 // import houston from "shiki/themes/poimandres.mjs";

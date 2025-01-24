@@ -3,7 +3,7 @@ import React, { memo, useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import { FROSTIN_DARK, getHighlighter } from "@/utils/shiki";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/css";
 import AutoImport, { regexTokeniser } from "./auto-import";
 import { initializeMonaco } from "./setup";
 // import darkTheme from "shiki/themes/dracula.mjs";

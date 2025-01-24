@@ -23,7 +23,7 @@ import * as nanoid from "nanoid";
 import * as useInterval from "@chakra-ui/react-use-interval";
 
 import { SandboxEditor } from "./editor";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/css";
 
 const baseScope = {
   /* base globals */
