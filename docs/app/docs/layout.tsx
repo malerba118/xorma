@@ -9,7 +9,7 @@ import { sections } from "./sections";
 
 const MotionLink = motion(Link);
 
-export const DocsContext = createContext<any>(null);
+const DocsContext = createContext<any>(null);
 
 import { HTMLMotionProps } from "framer-motion";
 import { LineMask } from "../../components/frostin-ui/components/line-mask";
@@ -30,7 +30,7 @@ export const DocsSection = ({ id, ...otherProps }: DocsSectionProps) => {
   );
 };
 
-export const Docs = ({ children }: any) => {
+const Docs = ({ children }: any) => {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
   return (

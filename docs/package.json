@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "preinstall": "npm run build --prefix ../xorma",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
