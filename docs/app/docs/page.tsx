@@ -1,7 +1,7 @@
-import { DocsSection } from "./layout";
+import { DocsSection } from "./docs-context";
 import { sections } from "./sections";
 
-export const DocsPage = () => {
+const DocsPage = () => {
   return (
     <div>
       {sections.map((section) => (

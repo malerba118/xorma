@@ -1,40 +1,57 @@
 "use client";
 
-import { createContext, memo, Suspense, useContext, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 // import Models from "./models.mdx";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { sections } from "./sections";
-
 const MotionLink = motion(Link);
-
-const DocsContext = createContext<any>(null);
-
-import { HTMLMotionProps } from "framer-motion";
 import { LineMask } from "../../components/frostin-ui/components/line-mask";
+import { DocsProvider, useDocs } from "./docs-context";
 
-interface DocsSectionProps extends HTMLMotionProps<"div"> {
-  id: string;
-}
+const SectionLink = ({ section }: { section: any }) => {
+  const { activeSectionId } = useDocs();
 
-export const DocsSection = ({ id, ...otherProps }: DocsSectionProps) => {
-  const docs = useContext(DocsContext);
   return (
-    <motion.div
-      id={id}
-      onViewportEnter={() => docs.setActiveSectionId(id)}
-      viewport={{ margin: "-50% 0px -50% 0px" }}
-      {...otherProps}
-    />
+    <MotionLink
+      href={`/docs#${section.id}`}
+      shallow
+      className="relative h-7 flex items-center pl-3"
+    >
+      {activeSectionId === section.id && (
+        <LineMask
+          layoutId="main-light"
+          layout
+          className="absolute left-[-1px] -top-0.5 -bottom-0.5 h-auto w-[1px] bg-white"
+          direction="to-bottom"
+        />
+      )}
+      {activeSectionId === section.id && (
+        <motion.div
+          layoutId="ambient-light"
+          layout
+          className="absolute left-[-3px] -top-3 -bottom-3 h-auto w-[6px] blur-[12px] z-10"
+          style={{
+            background: `radial-gradient(closest-side ellipse at center, white 0, transparent 100%)`,
+          }}
+        />
+      )}
+      <motion.span
+        initial={{ opacity: 0.5 }}
+        whileHover={{ opacity: 0.8 }}
+        animate={{
+          opacity: activeSectionId === section.id ? 0.95 : 0.5,
+        }}
+      >
+        {section.label}
+      </motion.span>
+    </MotionLink>
   );
 };
 
 const Docs = ({ children }: any) => {
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
-
   return (
-    <DocsContext.Provider value={{ activeSectionId, setActiveSectionId }}>
+    <DocsProvider>
       <Toaster expand />
       <div className="relative py-2 md:py-24 px-5 max-w-3xl mx-auto">
         <div className="sticky top-24 w-full h-0 invisible lg:visible">
@@ -48,47 +65,14 @@ const Docs = ({ children }: any) => {
                 direction="to-bottom"
               />
               {sections.map((section) => (
-                <MotionLink
-                  key={section.id}
-                  href={`/docs#${section.id}`}
-                  shallow
-                  className="relative h-7 flex items-center pl-3"
-                >
-                  {activeSectionId === section.id && (
-                    <LineMask
-                      layoutId="main-light"
-                      layout
-                      className="absolute left-[-1px] -top-0.5 -bottom-0.5 h-auto w-[1px] bg-white"
-                      direction="to-bottom"
-                    />
-                  )}
-                  {activeSectionId === section.id && (
-                    <motion.div
-                      layoutId="ambient-light"
-                      layout
-                      className="absolute left-[-3px] -top-3 -bottom-3 h-auto w-[6px] blur-[12px] z-10"
-                      style={{
-                        background: `radial-gradient(closest-side ellipse at center, white 0, transparent 100%)`,
-                      }}
-                    />
-                  )}
-                  <motion.span
-                    initial={{ opacity: 0.5 }}
-                    whileHover={{ opacity: 0.8 }}
-                    animate={{
-                      opacity: activeSectionId === section.id ? 0.95 : 0.5,
-                    }}
-                  >
-                    {section.label}
-                  </motion.span>
-                </MotionLink>
+                <SectionLink key={section.id} section={section} />
               ))}
             </div>
           </div>
         </div>
         {children}
       </div>
-    </DocsContext.Provider>
+    </DocsProvider>
   );
 };
 

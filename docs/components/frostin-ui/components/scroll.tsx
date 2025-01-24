@@ -144,7 +144,7 @@ export const WindowScrollProvider = ({ children }: any) => {
   }, []);
 
   return (
-    <ScrollContext.Provider value={scrollApi}>
+    <ScrollContext.Provider value={scrollApi as any}>
       {children}
     </ScrollContext.Provider>
   );
@@ -193,7 +193,7 @@ export const ScrollContainer = ({
   );
 
   return (
-    <ScrollContext.Provider value={scrollApi}>
+    <ScrollContext.Provider value={scrollApi as any}>
       <motion.div
         {...otherProps}
         ref={container}
