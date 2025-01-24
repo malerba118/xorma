@@ -1,0 +1,160 @@
+## Reactivity
+
+Before we dive deeper into xorma, let's briefly cover how mobx enables reactivity.
+
+### Observables and observers
+
+At its core, mobx is comprised of observables and observers.
+
+When an observable value is accessed inside of an observer, the observer will subscribe to the observable and will be re-executed whenever the observable is assigned a new value.
+
+```tsx live
+import { makeObservable, observable } from "mobx";
+import { observer } from "mobx-react";
+import { useInterval } from "./use-interval";
+
+class Counter {
+  count: number = 0;
+
+  constructor() {
+    makeObservable(this, {
+      count: observable.ref,
+    });
+  }
+}
+
+const counter = new Counter();
+
+const AutoCount = observer(() => {
+  useInterval(() => {
+    counter.count += 1;
+  }, 1000);
+
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <p className="text-sm">{counter.count}</p>
+    </div>
+  );
+});
+
+export default function App() {
+  return <AutoCount />;
+}
+```
+
+Here our little counter ticks away because we access the observable property, `count`, inside of an observer, `AutoCount`. Because of this, `AutoCount` is subcribed to all future changes to the `count` property and will re-render whenever `count` is assigned a new value.
+
+### Computeds
+
+Computed properties are a second powerful type of observable state at our disposal. When computed properties are accessed inside of an observer, the observer again will subscribe to any future changes. However, we cannot assign values to computed properties. Instead, they take the form of readonly getters which accept no arguments.
+
+```tsx live
+import { makeObservable, observable, computed } from "mobx";
+import { observer } from "mobx-react";
+import { useInterval } from "./use-interval";
+
+class Counter {
+  count: number = 0;
+
+  constructor() {
+    makeObservable(this, {
+      count: observable.ref,
+      doubled: computed,
+    });
+  }
+
+  get doubled() {
+    return this.count * 2;
+  }
+}
+
+const counter = new Counter();
+
+const AutoCount = observer(() => {
+  useInterval(() => {
+    counter.count += 1;
+  }, 1000);
+
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <p className="text-sm">{counter.doubled}</p>
+    </div>
+  );
+});
+
+export default function App() {
+  return <AutoCount />;
+}
+```
+
+You may question why we need to make `doubled` a computed getter. In this case, the reality is we don't. However, in more complex cases where the computed field logic is expensive, we can avoid executing the getter every time we access it and rather, mobx will cache its return value until the observables it depends on are modified.
+
+### Actions
+
+The last concept we'll cover is actions. Actions offer a way to batch changes. Observers will not be notified of changes to observables until an action terminates. This means we can assign new values to multiple observables inside of an action and we don't have to worry about observers reacting to the changes until the action terminates.
+
+```tsx live
+import { useEffect } from "react";
+import { makeObservable, observable, action, reaction } from "mobx";
+import { observer } from "mobx-react";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+
+class Counter {
+  count: number = 0;
+
+  constructor() {
+    makeObservable(this, {
+      count: observable.ref,
+      doNothing: action,
+    });
+  }
+
+  incrementAndDecrement() {
+    this.count += 1;
+    this.count -= 1;
+  }
+
+  doNothing() {
+    this.count += 1;
+    this.count -= 1;
+  }
+}
+
+const counter = new Counter();
+
+const AutoCount = observer(() => {
+  useEffect(() => {
+    // reactions are another type of observer
+    return reaction(
+      () => counter.count,
+      () => {
+        toast("Count changed: " + counter.count);
+      }
+    );
+  }, []);
+
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <Button onClick={() => counter.incrementAndDecrement()}>
+        Increment & decrement
+      </Button>
+      <Button onClick={() => counter.doNothing()}>Do nothing</Button>
+    </div>
+  );
+});
+
+export default function App() {
+  return (
+    <>
+      <AutoCount />
+      <Toaster expand />
+    </>
+  );
+}
+```
+
+Notice how the `doNothing` method seemingly does nothing because it's wrapped in an action, however the `incrementAndDecrement` method quickly triggers two toasts in succession since it is not wrapped in an action.
+
+To read up more about mobx, you can check out [their docs site](https://mobx.js.org/README.html#a-quick-example).

@@ -1,0 +1,155 @@
+## Inheritance
+
+Another powerful facet of xorma is class inheritance. You'll frequently want to build out model behavior incrementally via inheritance chains.
+
+Let's consider a `BaseModel` that all other models will inherit from. This is a great place to implement custom behaviors like soft deletes and cloning.
+
+```tsx live
+import { Model, Store, DataType } from "xorma";
+import { makeObservable, observable, computed, action } from "mobx";
+import { observer } from "mobx-react";
+import { nanoid } from "nanoid";
+import { Button } from "@/components/ui/button";
+
+interface BaseData {
+  id: string;
+}
+
+class BaseModel extends Model.withType(DataType<BaseData>()) {
+  static idSelector(data: BaseData) {
+    return data.id;
+  }
+
+  constructor(data: BaseData) {
+    super(data);
+    makeObservable(this, {
+      clone: action,
+    });
+  }
+
+  clone<T extends Model>(
+    this: T,
+    overrides: Partial<ReturnType<T["toJSON"]>> = {}
+  ): T {
+    return this.getClass().create({
+      ...this.toJSON(),
+      id: nanoid(),
+      ...overrides,
+    });
+  }
+}
+
+class UserModel extends BaseModel.withType(DataType<User>()) {
+  firstName: string;
+  lastName: string;
+
+  constructor(data: User) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      firstName: observable,
+      lastName: observable,
+      name: computed,
+    });
+  }
+
+  get name(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  loadJSON(data: User) {
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+  }
+
+  toJSON(): User {
+    return {
+      id: this.id,
+      first_name: this.firstName,
+      last_name: this.lastName,
+    };
+  }
+}
+
+const store = new Store({ schemaVersion: 0, models: { BaseModel, UserModel } });
+
+const initialUser = UserModel.create({
+  id: "user-1",
+  first_name: "Austin",
+  last_name: "Malerba",
+});
+
+const Demo = observer(() => {
+  return (
+    <div className="overlay stack items-center gap-2 py-12">
+      <div className="hstack gap-2">
+        <Button
+          onClick={() =>
+            initialUser.clone({
+              last_name: `${initialUser.lastName} ${
+                UserModel.getAll().length + 1
+              }`,
+            })
+          }
+        >
+          Clone user
+        </Button>
+      </div>
+      {UserModel.getAll().map((user) => (
+        <p key={user.id}>{user.name}</p>
+      ))}
+    </div>
+  );
+});
+
+export default function App() {
+  return <Demo />;
+}
+```
+
+An example of a more complex hierarchy would be a file viewer. You could imagine the model hierarchy for a file viewer to resemble the following.
+
+```tsx
+import { Model, DataType } from "xorma";
+
+type BaseData {
+  id: string
+  created_at: number
+  deleted_at: number | null
+}
+
+interface Node {
+  type: 'file' | 'folder'
+  parent_id: string | null
+  name: string
+}
+
+interface FileNode extends Node {
+  type: 'file'
+  size: number
+  content: string
+  content_type: string
+}
+
+interface FolderNode extends Node {
+  type: 'folder'
+}
+
+class BaseModel extends Model.withType(DataType<BaseData>()) {
+  /** ... */
+}
+
+class NodeModel extends BaseModel.withType(DataType<Node>()) {
+  /** ... */
+}
+
+class FileModel extends NodeModel.withType(DataType<File>()) {
+  /** ... */
+}
+
+class FolderModel extends NodeModel.withType(DataType<Folder>()) {
+  /** ... */
+}
+```
+
+And then this gives us a place to put all of our file-system business logic without mucking up our components.

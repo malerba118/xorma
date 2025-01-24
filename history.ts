@@ -57,6 +57,11 @@ export class HistoryManager<Item = any> {
     this.notifyListeners("redo");
   }
 
+  clear() {
+    this.stack.length = 0;
+    this.activeIndex = 0;
+  }
+
   notifyListeners(action: string) {
     this.events.emit("change", {
       action,

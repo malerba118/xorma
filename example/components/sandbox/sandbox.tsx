@@ -7,6 +7,7 @@ import {
   ResizablePanelGroup,
 } from "../ui/resizable";
 import Editor from "@monaco-editor/react";
+import * as react from "react";
 import * as mobx from "mobx";
 import * as mobxReact from "mobx-react";
 import * as framerMotion from "framer-motion";
@@ -15,7 +16,11 @@ import * as xorma from "xorma";
 import * as table from "@/components/ui/table";
 import * as button from "@/components/ui/button";
 import * as input from "@/components/ui/input";
+import * as toaster from "@/components/ui/sonner";
+import * as sonner from "sonner";
 import * as demoUtils from "@/app/docs/demo-utils";
+import * as nanoid from "nanoid";
+import * as useInterval from "@chakra-ui/react-use-interval";
 
 import { SandboxEditor } from "./editor";
 import { cn } from "@/lib/utils";
@@ -28,14 +33,19 @@ const DEFAULT_SCOPE: Scope = {
   ...baseScope,
   // scope used by import statement
   import: {
+    react,
     "framer-motion": framerMotion,
     mobx,
     "mobx-react": mobxReact,
     xorma,
+    nanoid,
+    sonner,
     "@/components/ui/table": table,
     "@/components/ui/button": button,
     "@/components/ui/input": input,
+    "@/components/ui/sonner": toaster,
     "./demo-utils": demoUtils,
+    "./use-interval": useInterval,
   },
 };
 

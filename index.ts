@@ -166,7 +166,7 @@ export class Store<
   models: {
     [K in keyof Models]: Models[K];
   };
-  _history = new HistoryManager();
+  private _history = new HistoryManager();
 
   constructor(params: StoreParams<Models>) {
     this.models = params.models;
@@ -209,6 +209,15 @@ export class Store<
         this.loadPatch(patch);
       }
     }
+  }
+
+  reset() {
+    // Clear all instances from each model collection
+    Object.values(this.models).forEach((model) => {
+      model._collection.instances = {};
+    });
+    // Clear history
+    this._history.clear();
   }
 
   history = {

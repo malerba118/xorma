@@ -48,12 +48,10 @@ export const SandboxEditor = memo(({ value, onChange }: SandboxEditorProps) => {
 
         getHighlighter()
           .then((highlighter) => {
-            console.log(
-              shikiToMonaco(highlighter, monaco, {
-                tokenizeMaxLineLength: 100000,
-                tokenizeTimeLimit: 2000,
-              })
-            );
+            shikiToMonaco(highlighter, monaco, {
+              tokenizeMaxLineLength: 100000,
+              tokenizeTimeLimit: 2000,
+            });
             setReady(true);
           })
           .catch(console.error);

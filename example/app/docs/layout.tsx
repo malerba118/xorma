@@ -71,6 +71,7 @@ export const Docs = ({ children }: any) => {
                     />
                   )}
                   <motion.span
+                    initial={{ opacity: 0.5 }}
                     animate={{
                       opacity: activeSectionId === section.id ? 0.9 : 0.5,
                     }}

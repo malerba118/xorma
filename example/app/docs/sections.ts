@@ -2,6 +2,8 @@ import IntroMdx from "./intro.mdx";
 import GettingStartedMdx from "./getting-started.mdx";
 import StoreMdx from "./store.mdx";
 import RelationshipsMdx from "./relationships.mdx";
+import InheritanceMdx from "./inheritance.mdx";
+import ReactivityMdx from "./reactivity.mdx";
 
 export const sections = [
   {
@@ -15,6 +17,11 @@ export const sections = [
     Markdown: GettingStartedMdx,
   },
   {
+    id: "reactivity",
+    label: "Reactivity",
+    Markdown: ReactivityMdx,
+  },
+  {
     id: "store",
     label: "Store",
     Markdown: StoreMdx,
@@ -23,5 +30,10 @@ export const sections = [
     id: "relationships",
     label: "Relationships",
     Markdown: RelationshipsMdx,
+  },
+  {
+    id: "inheritance",
+    label: "Inheritance",
+    Markdown: InheritanceMdx,
   },
 ];
