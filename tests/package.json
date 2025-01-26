@@ -1,0 +1,18 @@
+{
+  "name": "xorma-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest --environment=node"
+  },
+  "author": "Austin Malerba",
+  "license": "ISC",
+  "devDependencies": {
+    "mobx": "^6.13.5",
+    "vitest": "^3.0.4"
+  },
+  "dependencies": {
+    "xorma": "file:../xorma/xorma-1.0.0.tgz"
+  }
+}

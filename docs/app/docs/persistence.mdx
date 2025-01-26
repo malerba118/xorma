@@ -1,0 +1,117 @@
+## Persistence
+
+The easiest way to persist the store state is to call `store.toJSON()` inside of a mobx reaction and then do a debounced save to your backend.
+
+Below is a simplified example of what this process could look like.
+
+```tsx
+import { Model, Store } from "xorma";
+import { debounce } from "lodash";
+import { reaction } from "mobx";
+import axios from "axios";
+import { ProjectEditor } from "./editor";
+
+class ProjectModel extends Model {
+  /** ... */
+}
+
+const store = new Store({
+  schemaVersion: 0,
+  models: {
+    ProjectModel,
+    /** ... */
+  },
+});
+
+const saveProject = debounce(
+  (projectId, snapshot) => axios.post(`/api/project/${projectId}`, snapshot),
+  3000
+);
+
+const ProjectPage = observer(({ projectId }) => {
+  useEffect(() => {
+    axios.get(`/api/projects/${projectId}`).then((data) => {
+      store.reset();
+      store.loadJSON(data);
+    });
+  }, [projectId]);
+
+  useEffect(() => {
+    return reaction(
+      () => store.toJSON(),
+      (snapshot) => saveProject(projectId, snapshot)
+    );
+  }, [projectId]);
+
+  const project = ProjectModel.getById(params.projectId);
+
+  if (!project) return null;
+
+  return <ProjectEditor project={project} />;
+});
+```
+
+In reality, i would recommend using react-query and would be sure to handle loading/error states.
+
+### Migrations
+
+Another key part of persistence is migrations. When initializing the store, we can pass a `schemaVersion` parameter.
+
+This version will also be present in the data when you call `store.toJSON` and is expected to exist in the data passed to `store.loadJSON`.
+
+If the schemaVersion does not match, the store will throw an error. Whenever you update the data structure of your models, I recommend that you bump the store's schemaVersion and implement a migration function which will run against any previosuly stored data which is tied to an outdated schemaVersion.
+
+```tsx live
+interface MigrationConfig {
+  toVersion: number;
+  run: (snapshot: any) => any;
+}
+
+class Migration {
+  private toVersion: number;
+  private run: (snapshot: any) => any;
+
+  constructor(config: MigrationConfig) {
+    this.toVersion = config.toVersion;
+    this.run = config.run;
+  }
+
+  migrate(snapshot: any): any {
+    const result = this.run(snapshot);
+    return {
+      ...result,
+      schema_version: this.toVersion,
+    };
+  }
+}
+
+class Migrations {
+  private migrations: Migration[];
+
+  constructor(migrations: Migration[]) {
+    this.migrations = migrations.sort((a, b) => a.toVersion - b.toVersion);
+  }
+
+  run(snapshot: any): any {
+    let current = {
+      ...snapshot,
+      schema_version: snapshot.schema_version ?? 0,
+    };
+
+    for (const migration of this.migrations) {
+      if (current.schema_version < migration.toVersion) {
+        current = migration.migrate(current);
+      }
+    }
+
+    return current;
+  }
+}
+
+const migrations = new Migrations([
+  new Migration({ toVersion: 1, run: (snapshot) => {} }),
+  new Migration({ toVersion: 2, run: (snapshot) => {} }),
+]);
+
+const newSnapshot = migrations.run(oldSnapshot);
+```

@@ -15,7 +15,7 @@ const bundle = (config) => ({
   external: (id) => !/^[./]/.test(id),
 });
 
-// Function to run npm pack and install in docs
+// Function to run npm pack and install in docs and tests
 const reinstall = async () => {
   try {
     // Run npm pack
@@ -23,15 +23,25 @@ const reinstall = async () => {
     const tgzFile = stdout.trim(); // Get the generated tgz filename
     console.log(`Generated package: ${tgzFile}`);
 
-    // Install the package in the docs folder
+    // Install the package in both docs and tests folders
     const docsDir = path.join(process.cwd(), "../docs");
-    const installCommand = `npm install "${tgzFile}" --prefix ${docsDir}`;
+    const testsDir = path.join(process.cwd(), "../tests");
 
-    const { stdout: installOutput, stderr: installError } = await execAsync(
-      installCommand
+    // Install in docs
+    const docsInstallCommand = `npm install "${tgzFile}" --prefix ${docsDir}`;
+    const { stdout: docsOutput, stderr: docsError } = await execAsync(
+      docsInstallCommand
     );
-    console.log(`Package installed in docs: ${installOutput}`);
-    if (installError) console.error(`Install stderr: ${installError}`);
+    console.log(`Package installed in docs: ${docsOutput}`);
+    if (docsError) console.error(`Install stderr for docs: ${docsError}`);
+
+    // Install in tests
+    const testsInstallCommand = `npm install "${tgzFile}" --prefix ${testsDir}`;
+    const { stdout: testsOutput, stderr: testsError } = await execAsync(
+      testsInstallCommand
+    );
+    console.log(`Package installed in tests: ${testsOutput}`);
+    if (testsError) console.error(`Install stderr for tests: ${testsError}`);
   } catch (error) {
     console.error(`Error in pack and install: ${error}`);
   }

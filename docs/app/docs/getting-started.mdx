@@ -12,8 +12,6 @@ Each model will operate on a specific object type, so for example the `UserModel
 
 Take note of the fields that we mark as observable and computed. This is a necessary step to make our fields reactive and is standard practice when [working with mobx](https://mobx.js.org/observable-state.html).
 
-Reactive fields are powerful because whenever the value of a reactive field is changed, our React components will automatically rerender, receiving the newly assigned value.
-
 ```tsx
 import { DataType, Model } from "xorma";
 import { observable, computed } from "mobx";
