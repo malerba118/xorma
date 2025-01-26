@@ -1,6 +1,6 @@
 ## Relationships
 
-One of the powerful things you can do with xorma is create getters to access related model instances.
+One of the powerful things we can do with xorma is create getters to access related model instances.
 
 ### Foreign keys
 
@@ -37,9 +37,9 @@ class ProjectModel extends Model.withType(DataType<Project>) {
    * At first glance this might seem unperformant, but as long as we make
    * this field computed, its return value will be cached and it will only
    * be re-evaluated when its observable dependencies change. In this case,
-   * the observable dependencies only include the array of TaskModel instances and
-   * this array will only change when we create/delete tasks. In practice this means
-   * that the logic inside of this getter will rarely run 🙌.
+   * our only observable dependency is the array of TaskModel instances and
+   * this array will only change when we create/delete tasks. In practice,
+   * this means that the logic inside of this getter will rarely run 🙌.
    */
   get tasks(): TaskModel[] {
     return TaskModel.getAll().filter((task) => task.projectId === this.id);
@@ -71,7 +71,7 @@ class TaskModel extends Model.withType(DataType<Task>) {
 
 ### Embedded data
 
-In some cases, especially when working with nosql, our relationships are modeled as embedded subdocuments rather than through foreign keys.
+In some cases, especially when working with nosql, our relationships are modeled as embedded subdocuments rather than via foreign keys.
 
 Xorma supports this as well, though it generally leads to a clunkier experience, requires more maintenance logic, and decreases the viability of optimizations like sending patches to the server.
 

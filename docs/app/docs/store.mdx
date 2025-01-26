@@ -1,6 +1,6 @@
 ## Store
 
-In xorma, your state is held in a centralized store which you can think of as a reactive in-memory database.
+In xorma, our state is held in a centralized store which we can think of as a reactive in-memory database.
 
 <img
   src="/store-structure.png"
@@ -70,7 +70,7 @@ So as long as we wrap our component in the `observer` hoc, the component will au
 
 ### History
 
-The store also provides us a history api. At any point you can call `store.history.commit()` to push a snapshot onto the history stack.
+The store also provides us a history api. At any point we can call `store.history.commit()` to push a snapshot onto the history stack.
 And then we can navigate forward and backward via `store.history.undo()` and `store.history.redo()`.
 
 ```tsx live
@@ -123,8 +123,8 @@ export default function App() {
 
 ### Sandboxing
 
-Sometimes it's useful to dry-run some logic, but ultimately you don't want to change the store state.
-For example, consider a chess game in which you want to check a pieces valid moves. A natural way to check if
+Sometimes it's useful to dry-run some logic, but ultimately we don't want to change the store state.
+For example, consider a chess game in which we want to check a pieces valid moves. A natural way to check if
 a move is valid is simply to try moving the piece and then check whether the move puts the player in check.
 With sandboxing we can easily dry-run the move and revert the store to its previous state before we notify any observers of the changes.
 

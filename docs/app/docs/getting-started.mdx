@@ -1,14 +1,14 @@
 ## Getting Started
 
-To install xorma, you'll also need to install mobx.
+Firstly, we'll need to install xorma along with mobx.
 
 ```tsx
 npm i xorma mobx
 ```
 
-Once installed, you'll need to define some models.
+Next up, we'll need to define some models.
 
-Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. To get started you'll have to implement `loadJSON` and `toJSON` methods for each of your model types.
+Each model will operate on a specific object type, so for example the `UserModel` will operate on the `User` object type. To get started we'll have to implement `loadJSON` and `toJSON` methods for each of our model types.
 
 Take note of the fields that we mark as observable and computed. This is a necessary step to make our fields reactive and is standard practice when [working with mobx](https://mobx.js.org/observable-state.html).
 

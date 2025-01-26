@@ -1,14 +1,16 @@
 ## Persistence
 
-The easiest way to persist the store state is to call `store.toJSON()` inside of a mobx reaction and then do a debounced save to your backend.
+The easiest way to persist the store state is to call `store.toJSON()` inside of a mobx reaction and then do a debounced save to our backend.
 
 Below is a simplified example of what this process could look like.
 
 ```tsx
+import { useEffect } from "react";
 import { Model, Store } from "xorma";
-import { debounce } from "lodash";
 import { reaction } from "mobx";
+import { observer } from "mobx-react";
 import axios from "axios";
+import { debounce } from "lodash";
 import { ProjectEditor } from "./editor";
 
 class ProjectModel extends Model {
@@ -55,13 +57,13 @@ const ProjectPage = observer(({ projectId }) => {
 
 Another key part of persistence is migrations. When initializing the store, we can pass a `schemaVersion` parameter.
 
-This version will also be present in the serialized data returned by `store.toJSON`.
+This version number will also be present in the serialized data returned by `store.toJSON`.
 
-If the schemaVersion of the data ingested by store.loadJSON does nto match the schemaVersion specified when initializing the store, the store will throw an error.
+If the `schemaVersion` of the data ingested by `store.loadJSON` does not match the `schemaVersion` specified when initializing the store, the store will throw an error.
 
-Whenever we modify our models in a way that alters the shape of the serialized store data, we should bump the store's schemaVersion and implement a migration function capable of reshaping older snapshots into the new format.
+Whenever we modify our models in a way that alters the shape of the serialized store data, we should bump the store's `schemaVersion` and implement a migration function capable of reshaping older snapshots into the new format.
 
-Let's assume we have the following TaskModel. The status of the task is represented as a boolean `done` state.
+Let's assume we have the following `TaskModel` implementation where the status of the task is represented as a boolean `done` state.
 
 ```tsx
 import { DataType, Model, Store } from "xorma";
@@ -103,9 +105,9 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
 const store = new Store({ schemaVersion: 0, models: { TaskModel } });
 ```
 
-But we're feeling this isn't experessive enough and instead of a boolean done field, we decide we want a status field which can be one of `["idle", "in-progress", "done"]`.
+But we're now feeling this isn't experessive enough and instead of a boolean `done` field, we decide we want a `status` field which can be one of `["idle", "in-progress", "done"]`.
 
-We can update our type and model to accomodate this
+We can update our type and model to accomodate this.
 
 ```tsx
 import { DataType, Model, Store } from "xorma";
@@ -148,7 +150,7 @@ class TaskModel extends BaseModel.withType(DataType<Task>()) {
 const store = new Store({ schemaVersion: 1, models: { TaskModel } });
 ```
 
-But now if we fetch a project with schemaVersion 0, obviously we can't load that into the store, because it has a done field and status will be undefined.
+But now if we fetch a project that was already save to the backend with schemaVersion 0, obviously we can't load that into the store because it has a `done` field and `status` will be undefined.
 
 So we can write a migration that will run lazily whenever we fetch a project from the backend and we can make sure that it's been adapted to meet the store's current assumptions about the shape of the data.
 

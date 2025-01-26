@@ -6,11 +6,12 @@ import InheritanceMdx from "./inheritance.mdx";
 import ReactivityMdx from "./reactivity.mdx";
 import ExamplesMdx from "./examples.mdx";
 import PersistenceMdx from "./persistence.mdx";
+import ApiReferenceMdx from "./api-reference.mdx";
 
 export const sections = [
   {
-    id: "intro",
-    label: "Intro",
+    id: "overview",
+    label: "Overview",
     Markdown: IntroMdx,
   },
   {
@@ -42,6 +43,11 @@ export const sections = [
     id: "persistence",
     label: "Persistence",
     Markdown: PersistenceMdx,
+  },
+  {
+    id: "api-reference",
+    label: "Reference",
+    Markdown: ApiReferenceMdx,
   },
   {
     id: "examples",

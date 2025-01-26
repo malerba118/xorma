@@ -1,0 +1,106 @@
+## API Reference
+
+### Store
+
+The central class that manages all model instances.
+
+```tsx
+interface StoreData<Data extends Record<string, Record<string, object>>> {
+  schemaVersion: number;
+  data: Data;
+}
+
+interface StorePatch {
+  schemaVersion: number;
+  data: Record<string, Record<string, object | null>>;
+}
+
+class Store<Models> {
+  constructor(params: { schemaVersion?: number; models: Models });
+
+  // Methods
+  sandbox<T>(
+    callback: (options: { commit: () => void; revert: () => void }) => T
+  ): T;
+  reset(): void;
+  toJSON(): StoreData<Models>;
+  loadJSON(data: StoreData<Models>): void;
+  loadPatch(patch: StorePatch): void;
+
+  // Properties
+  history: {
+    commit(options?: { replace?: boolean }): void;
+    undo(): void;
+    redo(): void;
+    clear(): void;
+    readonly items: StoreData<Models>[];
+    readonly activeIndex: number;
+    readonly activeItem: StoreData<Models> | undefined;
+  };
+}
+```
+
+### Model
+
+Base class for creating and managing models.
+
+```tsx
+class Model {
+  static create<T extends Model>(data: any): T;
+  static getById<T extends Model>(
+    id: string,
+    options?: { includeChildren?: boolean }
+  ): T | undefined;
+  static getAll<T extends Model>(options?: { includeChildren?: boolean }): T[];
+  static withType<T extends DefaultData>(): RetypedModelClass<typeof Model, T>;
+
+  // Instance methods
+  delete(): this;
+  toJSON(): any;
+  loadJSON(data: any): void;
+
+  // Properties
+  readonly id: string;
+  readonly isDeleted: boolean;
+  readonly isDetached: boolean;
+}
+```
+
+### Utilities
+
+```tsx
+// Deep clone an object, ensuring that all observable properties
+// are accessed and also that all proxies are stripped.
+function dereference<T>(data: T): T;
+
+// Compare two objects for deep equality
+function isDeepEqual(obj1: any, obj2: any): boolean;
+
+// Map values of an object
+function mapValues<T, U>(
+  obj: { [K in keyof T]: T[K] },
+  mapper: (value: T[keyof T], key: keyof T) => U
+): { [K in keyof T]: U };
+
+class Migration {
+  constructor(params: { toVersion: number; run: (data: any) => any });
+}
+
+class Migrations<T extends StoreData<any>> {
+  constructor(migrations: Migration[]);
+  run(snapshot: StoreData<any>): T;
+}
+
+class PromiseManager<T extends (...args: any[]) => Promise<any>> {
+  constructor(asyncFunction: T);
+
+  // Methods
+  execute(...args: Parameters<T>): Promise<ReturnType<T>>;
+
+  // Properties
+  readonly status: "idle" | "pending" | "fulfilled" | "rejected";
+  readonly isPending: boolean;
+  readonly isFulfilled: boolean;
+  readonly isRejected: boolean;
+}
+```
