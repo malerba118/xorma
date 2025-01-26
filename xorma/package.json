@@ -1,6 +1,6 @@
 {
   "name": "xorma",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -11,8 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
-    "dist",
-    "README.md"
+    "dist"
   ],
   "author": "Austin Malerba",
   "license": "MIT",
@@ -24,9 +23,6 @@
     "rollup-plugin-esbuild": "^6.1.1"
   },
   "peerDependencies": {
-    "mobx": ">5.0.0"
-  },
-  "dependencies": {
-    "eventemitter3": "^5.0.1"
+    "mobx": ">=5.0.0"
   }
 }
