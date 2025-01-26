@@ -101,6 +101,8 @@ test("should delete model instance and trigger appropriate reactions", () => {
   expect(getByIdReaction).toHaveBeenCalledTimes(2);
   expect(CounterModel.getAll().length).toEqual(0);
   expect(CounterModel.getById("123")).toBeUndefined();
+  expect(counter.isDeleted).toBe(true);
+  expect(counter.isDetached).toBe(true);
 });
 
 test("should handle basic undo/redo operations in store history", () => {

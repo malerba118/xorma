@@ -475,7 +475,7 @@ export class Model {
   /** An instance is detached when it is removed from the collection.
    * This usually happens as a result of undo/redo. */
   get isDetached() {
-    return !!this.getClass()._collection.instances[this._id];
+    return !this.getClass()._collection.instances[this._id];
   }
 
   toJSON(): DefaultData {
