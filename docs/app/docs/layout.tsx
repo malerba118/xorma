@@ -38,7 +38,7 @@ const SectionLink = ({ section }: { section: any }) => {
       )}
       <motion.span
         initial={{ opacity: 0.5 }}
-        whileHover={{ opacity: 0.8 }}
+        whileHover={{ opacity: 0.85 }}
         animate={{
           opacity: activeSectionId === section.id ? 0.95 : 0.5,
         }}
