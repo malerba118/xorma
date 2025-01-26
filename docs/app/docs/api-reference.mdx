@@ -46,6 +46,7 @@ Base class for creating and managing models.
 
 ```tsx
 class Model {
+  static idSelector(data: any): string;
   static create<T extends Model>(data: any): T;
   static getById<T extends Model>(
     id: string,
