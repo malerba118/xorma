@@ -101,3 +101,82 @@ test("Simple migration flow", () => {
   store2.loadJSON(migratedData);
   expect(migratedData).toEqual(store2.toJSON());
 });
+
+const v0Data = {
+  schemaVersion: 0,
+  data: {
+    DummyModel: {
+      "123": {
+        id: "123",
+      },
+    },
+  },
+};
+
+const v1Data = {
+  schemaVersion: 1,
+  data: {
+    DummyModel: {
+      "123": {
+        id: "123",
+        field1: 1,
+      },
+    },
+  },
+};
+
+const v2Data = {
+  schemaVersion: 2,
+  data: {
+    DummyModel: {
+      "123": {
+        id: "123",
+        field1: 1,
+        field2: 1,
+      },
+    },
+  },
+};
+
+const v3Data = {
+  schemaVersion: 3,
+  data: {
+    DummyModel: {
+      "123": {
+        id: "123",
+        field1: 1,
+        field2: 1,
+        field3: 1,
+      },
+    },
+  },
+};
+
+test("Multiple migrations flow", () => {
+  const migrations = new Migrations([
+    new Migration({
+      toVersion: 1,
+      run: (data) => {
+        data["DummyModel"] = mapValues(data["DummyModel"], (obj) => ({
+          ...obj,
+          field1: 1,
+        }));
+        return data;
+      },
+    }),
+    new Migration({
+      toVersion: 2,
+      run: (data) => {
+        data["DummyModel"] = mapValues(data["DummyModel"], (obj) => ({
+          ...obj,
+          field2: 1,
+        }));
+        return data;
+      },
+    }),
+  ]);
+  expect(migrations.run(v0Data)).toEqual(v2Data);
+  expect(migrations.run(v1Data)).toEqual(v2Data);
+  expect(migrations.run(v2Data)).toEqual(v2Data);
+  expect(migrations.run(v3Data)).toEqual(v3Data);
+});
