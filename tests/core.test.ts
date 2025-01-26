@@ -31,7 +31,7 @@ class CounterModel extends Model.withType(DataType<Counter>()) {
   }
 }
 
-test("Create an instance", () => {
+test("should create a model instance and trigger appropriate reactions", () => {
   const store = new Store({ models: { CounterModel } });
 
   const getAllReaction = vi.fn();
@@ -54,7 +54,7 @@ test("Create an instance", () => {
   expect(CounterModel.getById("123") === counter).toBeTruthy();
 });
 
-test("Instances should be singleton", () => {
+test("should ensure model instances with same ID are singleton", () => {
   const store = new Store({ models: { CounterModel } });
 
   const getAllReaction = vi.fn();
@@ -79,7 +79,7 @@ test("Instances should be singleton", () => {
   expect(CounterModel.getAll().length).toBe(2);
 });
 
-test("Delete an instance", () => {
+test("should delete model instance and trigger appropriate reactions", () => {
   const store = new Store({ models: { CounterModel } });
 
   const getAllReaction = vi.fn();
@@ -103,7 +103,7 @@ test("Delete an instance", () => {
   expect(CounterModel.getById("123")).toBeUndefined();
 });
 
-test("Store history", () => {
+test("should handle basic undo/redo operations in store history", () => {
   const store = new Store({ models: { CounterModel } });
 
   const getAllReaction = vi.fn();
@@ -135,4 +135,96 @@ test("Store history", () => {
   expect(snap1).toEqual(store.toJSON());
   store.history.redo();
   expect(snap2).toEqual(store.toJSON());
+});
+
+test("should revert changes made in sandbox by default", () => {
+  const store = new Store({ models: { CounterModel } });
+
+  const getAllReaction = vi.fn();
+  reaction(() => CounterModel.getAll(), getAllReaction, {
+    fireImmediately: false,
+  });
+
+  store.sandbox(() => {
+    CounterModel.create({ id: "123", count: 1 });
+    CounterModel.create({ id: "456", count: 2 });
+  });
+
+  expect(CounterModel.getAll().length).toBe(0);
+});
+
+test("should persist changes when sandbox changes are committed", () => {
+  const store = new Store({ models: { CounterModel } });
+
+  const getAllReaction = vi.fn();
+  reaction(() => CounterModel.getAll(), getAllReaction, {
+    fireImmediately: false,
+  });
+
+  store.sandbox(({ commit }) => {
+    CounterModel.create({ id: "123", count: 1 });
+    CounterModel.create({ id: "456", count: 2 });
+    commit();
+  });
+
+  expect(CounterModel.getAll().length).toBe(2);
+  expect(getAllReaction).toHaveBeenCalledTimes(1);
+});
+
+test("should handle complex undo/redo operations with multiple state changes", () => {
+  const store = new Store({ models: { CounterModel } });
+
+  // Initial state
+  store.history.commit();
+
+  // State 1: Add counter1
+  const counter1 = CounterModel.create({ id: "123", count: 1 });
+  store.history.commit();
+
+  // State 2: Modify counter1
+  counter1.count = 5;
+  store.history.commit();
+
+  // State 3: Add counter2
+  const counter2 = CounterModel.create({ id: "456", count: 2 });
+  store.history.commit();
+
+  // Test complex undo/redo sequence
+  expect(CounterModel.getAll().length).toBe(2);
+  expect(counter1.count).toBe(5);
+
+  store.history.undo(); // Remove counter2
+  expect(CounterModel.getAll().length).toBe(1);
+
+  store.history.undo(); // Revert counter1 count to 1
+  expect(counter1.count).toBe(1);
+
+  store.history.redo(); // Restore counter1 count to 5
+  expect(counter1.count).toBe(5);
+
+  store.history.redo(); // Restore counter2
+  expect(CounterModel.getAll().length).toBe(2);
+});
+
+test("should not trigger collection reactions when modifying model properties", () => {
+  const store = new Store({ models: { CounterModel } });
+
+  const getAllReaction = vi.fn();
+  const getByIdReaction = vi.fn();
+
+  reaction(() => CounterModel.getAll(), getAllReaction, {
+    fireImmediately: false,
+  });
+
+  reaction(() => CounterModel.getById("123"), getByIdReaction, {
+    fireImmediately: false,
+  });
+
+  const counter = CounterModel.create({ id: "123", count: 1 });
+  expect(getAllReaction).toHaveBeenCalledTimes(1);
+  expect(getByIdReaction).toHaveBeenCalledTimes(1);
+
+  counter.count = 5; // Modify existing counter
+  expect(getAllReaction).toHaveBeenCalledTimes(1); // Shouldn't trigger getAll
+  expect(getByIdReaction).toHaveBeenCalledTimes(1); // Shouldn't trigger getById
 });
