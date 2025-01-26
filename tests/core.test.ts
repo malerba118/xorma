@@ -150,6 +150,7 @@ test("should revert changes made in sandbox by default", () => {
     CounterModel.create({ id: "456", count: 2 });
   });
 
+  expect(CounterModel.getById("123")).toBeUndefined();
   expect(CounterModel.getAll().length).toBe(0);
 });
 

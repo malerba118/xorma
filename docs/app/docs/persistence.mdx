@@ -51,67 +51,129 @@ const ProjectPage = observer(({ projectId }) => {
 });
 ```
 
-In reality, i would recommend using react-query and would be sure to handle loading/error states.
-
 ### Migrations
 
 Another key part of persistence is migrations. When initializing the store, we can pass a `schemaVersion` parameter.
 
-This version will also be present in the data when you call `store.toJSON` and is expected to exist in the data passed to `store.loadJSON`.
+This version will also be present in the serialized data returned by `store.toJSON`.
 
-If the schemaVersion does not match, the store will throw an error. Whenever you update the data structure of your models, I recommend that you bump the store's schemaVersion and implement a migration function which will run against any previosuly stored data which is tied to an outdated schemaVersion.
+If the schemaVersion of the data ingested by store.loadJSON does nto match the schemaVersion specified when initializing the store, the store will throw an error.
 
-```tsx live
-interface MigrationConfig {
-  toVersion: number;
-  run: (snapshot: any) => any;
+Whenever we modify our models in a way that alters the shape of the serialized store data, we should bump the store's schemaVersion and implement a migration function capable of reshaping older snapshots into the new format.
+
+Let's assume we have the following TaskModel. The status of the task is represented as a boolean `done` state.
+
+```tsx
+import { DataType, Model, Store } from "xorma";
+import { observable, computed } from "mobx";
+
+interface Task {
+  id: string;
+  name: string;
+  done: boolean;
 }
 
-class Migration {
-  private toVersion: number;
-  private run: (snapshot: any) => any;
+class TaskModel extends BaseModel.withType(DataType<Task>()) {
+  name: string;
+  done: boolean;
 
-  constructor(config: MigrationConfig) {
-    this.toVersion = config.toVersion;
-    this.run = config.run;
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      name: observable,
+      done: observable,
+    });
   }
 
-  migrate(snapshot: any): any {
-    const result = this.run(snapshot);
+  toJSON(): Task {
     return {
-      ...result,
-      schema_version: this.toVersion,
+      id: this.id,
+      name: this.name,
+      done: this.done,
     };
+  }
+
+  loadJSON(data: Task) {
+    this.name = data.name;
+    this.done = data.done;
   }
 }
 
-class Migrations {
-  private migrations: Migration[];
+const store = new Store({ schemaVersion: 0, models: { TaskModel } });
+```
 
-  constructor(migrations: Migration[]) {
-    this.migrations = migrations.sort((a, b) => a.toVersion - b.toVersion);
+But we're feeling this isn't experessive enough and instead of a boolean done field, we decide we want a status field which can be one of `["idle", "in-progress", "done"]`.
+
+We can update our type and model to accomodate this
+
+```tsx
+import { DataType, Model, Store } from "xorma";
+import { observable, computed } from "mobx";
+
+interface Task {
+  id: string;
+  name: string;
+  status: "idle" | "in-progress" | "done";
+}
+
+class TaskModel extends BaseModel.withType(DataType<Task>()) {
+  name: string;
+  status: "idle" | "in-progress" | "done";
+
+  constructor(data: Task) {
+    super(data);
+    this.loadJSON(data);
+    makeObservable(this, {
+      name: observable,
+      status: observable,
+    });
   }
 
-  run(snapshot: any): any {
-    let current = {
-      ...snapshot,
-      schema_version: snapshot.schema_version ?? 0,
+  toJSON(): Task {
+    return {
+      id: this.id,
+      name: this.name,
+      status: this.status,
     };
+  }
 
-    for (const migration of this.migrations) {
-      if (current.schema_version < migration.toVersion) {
-        current = migration.migrate(current);
-      }
-    }
-
-    return current;
+  loadJSON(data: Task) {
+    this.name = data.name;
+    this.status = data.status;
   }
 }
+
+// Note that we've bumped the schemaVersion
+const store = new Store({ schemaVersion: 1, models: { TaskModel } });
+```
+
+But now if we fetch a project with schemaVersion 0, obviously we can't load that into the store, because it has a done field and status will be undefined.
+
+So we can write a migration that will run lazily whenever we fetch a project from the backend and we can make sure that it's been adapted to meet the store's current assumptions about the shape of the data.
+
+```tsx
+import { Migration, Migrations, mapValues } from "xorma";
 
 const migrations = new Migrations([
-  new Migration({ toVersion: 1, run: (snapshot) => {} }),
-  new Migration({ toVersion: 2, run: (snapshot) => {} }),
+  new Migration({
+    toVersion: 1,
+    run: (data) => {
+      return {
+        ...data,
+        TaskModel: mapValues(data.TaskModel, (task) => {
+          const nextTask = {
+            ...task,
+            status: task.done ? "done" : "idle",
+          };
+          delete nextTask["done"];
+          return nextTask;
+        }),
+      };
+    },
+  }),
 ]);
 
+// Yay, now our old snapshot will meet the expectations of our latest store logic.
 const newSnapshot = migrations.run(oldSnapshot);
 ```
