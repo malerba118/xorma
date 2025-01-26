@@ -1,4 +1,4 @@
-import IntroMdx from "./intro.mdx";
+import OverviewMdx from "./overview.mdx";
 import GettingStartedMdx from "./getting-started.mdx";
 import StoreMdx from "./store.mdx";
 import RelationshipsMdx from "./relationships.mdx";
@@ -12,7 +12,7 @@ export const sections = [
   {
     id: "overview",
     label: "Overview",
-    Markdown: IntroMdx,
+    Markdown: OverviewMdx,
   },
   {
     id: "getting-started",
