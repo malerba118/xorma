@@ -153,10 +153,14 @@ const v3Data = {
 };
 
 test("Multiple migrations flow", () => {
+  const spy1 = vi.fn();
+  const spy2 = vi.fn();
+
   const migrations = new Migrations([
     new Migration({
       toVersion: 1,
       run: (data) => {
+        spy1();
         data["DummyModel"] = mapValues(data["DummyModel"], (obj) => ({
           ...obj,
           field1: 1,
@@ -167,6 +171,7 @@ test("Multiple migrations flow", () => {
     new Migration({
       toVersion: 2,
       run: (data) => {
+        spy2();
         data["DummyModel"] = mapValues(data["DummyModel"], (obj) => ({
           ...obj,
           field2: 1,
@@ -175,8 +180,38 @@ test("Multiple migrations flow", () => {
       },
     }),
   ]);
-  expect(migrations.run(v0Data)).toEqual(v2Data);
-  expect(migrations.run(v1Data)).toEqual(v2Data);
-  expect(migrations.run(v2Data)).toEqual(v2Data);
-  expect(migrations.run(v3Data)).toEqual(v3Data);
+
+  // v0 -> v2 should run both migrations
+  const result0 = migrations.run(v0Data);
+  expect(result0).toEqual(v2Data);
+  expect(spy1).toHaveBeenCalledTimes(1);
+  expect(spy2).toHaveBeenCalledTimes(1);
+
+  // Reset the spies
+  spy1.mockClear();
+  spy2.mockClear();
+
+  // v1 -> v2 should only run the second migration
+  const result1 = migrations.run(v1Data);
+  expect(result1).toEqual(v2Data);
+  expect(spy1).not.toHaveBeenCalled();
+  expect(spy2).toHaveBeenCalledTimes(1);
+
+  spy1.mockClear();
+  spy2.mockClear();
+
+  // v2 -> v2 should run no migrations
+  const result2 = migrations.run(v2Data);
+  expect(result2).toEqual(v2Data);
+  expect(spy1).not.toHaveBeenCalled();
+  expect(spy2).not.toHaveBeenCalled();
+
+  spy1.mockClear();
+  spy2.mockClear();
+
+  // v3 -> v3 should run no migrations
+  const result3 = migrations.run(v3Data);
+  expect(result3).toEqual(v3Data);
+  expect(spy1).not.toHaveBeenCalled();
+  expect(spy2).not.toHaveBeenCalled();
 });
