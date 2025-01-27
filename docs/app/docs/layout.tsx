@@ -8,6 +8,21 @@ import { sections } from "./sections";
 const MotionLink = motion(Link);
 import { LineMask } from "../../components/frostin-ui/components/line-mask";
 import { DocsProvider, useDocs } from "./docs-context";
+import { Button } from "../../components/ui/button";
+import { CopyIcon } from "lucide-react";
+import { useClipboard } from "@ark-ui/react/clipboard";
+import { useState } from "react";
+import { PromiseManager } from "xorma";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import axios from "axios";
+// Create a client
+const queryClient = new QueryClient();
 
 const SectionLink = ({ section }: { section: any }) => {
   const { activeSectionId } = useDocs();
@@ -49,30 +64,53 @@ const SectionLink = ({ section }: { section: any }) => {
   );
 };
 
+const CopyButton = () => {
+  const query = useQuery({
+    queryKey: ["docs"],
+    queryFn: () => axios.get("/api/docs").then((res) => res.data),
+  });
+  const clipboard = useClipboard({ value: query.data });
+
+  return (
+    <Button
+      className="fixed top-4 right-4 pl-2.5 pr-3 rounded-lg backdrop-blur-[2px]  z-10"
+      variant="outline"
+      disabled={query.isLoading || query.isError}
+      onClick={() => clipboard.copy()}
+    >
+      <CopyIcon />
+      <span>{clipboard.copied ? "Copied!" : "Copy"}</span>
+    </Button>
+  );
+};
+
 const Docs = ({ children }: any) => {
   return (
-    <DocsProvider>
-      <Toaster expand />
-      <div className="relative py-2 md:py-24 px-5 max-w-3xl mx-auto">
-        <div className="sticky top-24 w-full h-0 invisible lg:visible">
-          <div className="absolute -left-12 top-6 -translate-x-full stack gap-1.5 font-medium">
-            <h3 className="font-heading font-semibold text-3xl">xorma</h3>
-            <div className="relative -ml-3">
-              <LineMask
-                className="absolute h-auto -top-0.5 -bottom-0.5 left-[-1px] bg-border w-[1px]"
-                positions={[0, 0.08, 0.92, 1]}
-                opacities={[0, 1, 1, 0]}
-                direction="to-bottom"
-              />
-              {sections.map((section) => (
-                <SectionLink key={section.id} section={section} />
-              ))}
+    <QueryClientProvider client={queryClient}>
+      <DocsProvider>
+        <Toaster expand />
+        <CopyButton />
+        <div className="relative py-2 md:py-24 px-5 max-w-3xl mx-auto">
+          <div className="sticky top-24 w-full h-0 invisible lg:visible">
+            <div className="absolute -left-12 top-6 -translate-x-full stack gap-1.5 font-medium">
+              <h3 className="font-heading font-semibold text-3xl">xorma</h3>
+              <div className="relative -ml-3">
+                <LineMask
+                  className="absolute h-auto -top-0.5 -bottom-0.5 left-[-1px] bg-border w-[1px]"
+                  positions={[0, 0.08, 0.92, 1]}
+                  opacities={[0, 1, 1, 0]}
+                  direction="to-bottom"
+                />
+                {sections.map((section) => (
+                  <SectionLink key={section.id} section={section} />
+                ))}
+              </div>
             </div>
           </div>
+          {children}
         </div>
-        {children}
-      </div>
-    </DocsProvider>
+      </DocsProvider>
+    </QueryClientProvider>
   );
 };
 
