@@ -15,11 +15,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/llm.txt",
+        source: "/llms.txt",
         destination: "/api/docs",
       },
       {
-        source: "/docs/llm.txt",
+        source: "/docs/llms.txt",
         destination: "/api/docs",
       },
     ];
