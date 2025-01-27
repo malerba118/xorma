@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/llm.txt",
+        destination: "/api/docs",
+      },
+      {
+        source: "/docs/llm.txt",
+        destination: "/api/docs",
+      },
+    ];
+  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
