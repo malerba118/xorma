@@ -90,7 +90,7 @@ const Docs = ({ children }: any) => {
       <DocsProvider>
         <Toaster expand />
         <CopyButton />
-        <div className="relative py-8 md:py-24 px-5 max-w-3xl mx-auto">
+        <div className="relative py-10 md:py-24 px-5 max-w-3xl mx-auto">
           <div className="sticky top-24 w-full h-0 invisible lg:visible">
             <div className="absolute -left-12 top-6 -translate-x-full stack gap-1.5 font-medium">
               <h3 className="font-heading font-semibold text-3xl">xorma</h3>
