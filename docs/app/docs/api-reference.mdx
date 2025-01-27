@@ -83,6 +83,12 @@ function mapValues<T, U>(
   mapper: (value: T[keyof T], key: keyof T) => U
 ): { [K in keyof T]: U };
 
+// Calculate the difference between two store states
+function diff(
+  prev: StoreData<Record<string, Record<string, object>>>,
+  next: StoreData<Record<string, Record<string, object>>>
+): StorePatch;
+
 class Migration {
   constructor(params: { toVersion: number; run: (data: any) => any });
 }
