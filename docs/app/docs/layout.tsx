@@ -79,7 +79,7 @@ const CopyButton = () => {
       onClick={() => clipboard.copy()}
     >
       <CopyIcon />
-      <span>{clipboard.copied ? "Copied!" : "Copy"}</span>
+      <span>{clipboard.copied ? "Docs copied!" : "Copy to LLM"}</span>
     </Button>
   );
 };
