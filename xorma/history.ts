@@ -1,17 +1,33 @@
-import { action, computed, makeObservable, observable } from "mobx";
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  type IObservableArray,
+} from "mobx";
+
+function equals<T>(a: T, b: T | undefined): boolean {
+  if (a === b) return true;
+  if (a === undefined || b === undefined) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 
 export class HistoryManager<Item = any> {
-  items: Item[];
+  /** The timeline itself (observable, shallow). */
+  readonly items: IObservableArray<Item>;
+  /** Index of the active entry; ‑1 means “no entry yet”. */
   activeIndex: number;
-  limit: number;
+  /** Maximum number of snapshots to keep. */
+  readonly limit: number;
 
   constructor(defaultItems: Item[] = [], limit = 50) {
-    this.items = defaultItems;
-    this.activeIndex = defaultItems.length - 1;
+    this.items = observable.array(defaultItems, { deep: false });
+    this.activeIndex = this.items.length ? this.items.length - 1 : -1;
     this.limit = limit;
+
     makeObservable(this, {
       items: observable.shallow,
-      activeIndex: observable.ref,
+      activeIndex: observable,
       activeItem: computed,
       push: action,
       replace: action,
@@ -21,43 +37,55 @@ export class HistoryManager<Item = any> {
     });
   }
 
+  /** The currently selected snapshot (or `undefined` if none). */
   get activeItem(): Item | undefined {
     return this.items[this.activeIndex];
   }
 
+  /** Append a new snapshot and make it the active one. */
   push(item: Item) {
-    if (JSON.stringify(item) === JSON.stringify(this.activeItem)) {
-      return;
+    if (equals(item, this.activeItem)) return;
+
+    /* 1 — discard the redo stack (everything AFTER the caret) */
+    if (this.activeIndex < this.items.length - 1) {
+      this.items.splice(this.activeIndex + 1);
     }
+
+    /* 2 — enforce the size limit */
     if (this.items.length === this.limit) {
-      this.items.shift(); // remove first item
-      this.items.push(item); // add new item
-    } else {
-      this.activeIndex += 1;
-      this.items.splice(this.activeIndex, this.items.length);
-      this.items[this.activeIndex] = item;
+      this.items.shift();
+      this.activeIndex = Math.max(this.activeIndex - 1, 0);
     }
+
+    /* 3 — add the new state */
+    this.items.push(item);
+    this.activeIndex = this.items.length - 1;
   }
 
+  /** Replace the current snapshot (keeps history length unchanged). */
   replace(item: Item) {
-    if (JSON.stringify(item) === JSON.stringify(this.activeItem)) {
-      return;
+    if (equals(item, this.activeItem)) return;
+
+    /* Remove any redo entries, then overwrite the current one */
+    if (this.activeIndex < this.items.length - 1) {
+      this.items.splice(this.activeIndex + 1);
     }
-    this.items.splice(this.activeIndex, this.items.length);
     this.items[this.activeIndex] = item;
   }
 
+  /** Step one entry back, if possible. */
   undo() {
-    this.activeIndex = Math.max(this.activeIndex - 1, 0);
+    if (this.activeIndex > 0) this.activeIndex--;
   }
 
+  /** Step one entry forward, if possible. */
   redo() {
-    this.activeIndex = Math.min(this.activeIndex + 1, this.items.length - 1);
+    if (this.activeIndex < this.items.length - 1) this.activeIndex++;
   }
 
+  /** Wipe the entire timeline and reset the caret. */
   clear() {
-    // @ts-ignore
-    this.items.clear();
-    this.activeIndex = 0;
+    this.items.clear(); // `IObservableArray` helper
+    this.activeIndex = -1;
   }
 }
