@@ -29,7 +29,7 @@ export class PromiseManager<T extends (...args: any[]) => Promise<any>> {
     return this.status === "rejected";
   }
 
-  execute = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  execute = async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
     const currentExecutionCount = this.executionCount + 1;
     this.executionCount = currentExecutionCount;
     this.setStatus("pending");
@@ -40,13 +40,13 @@ export class PromiseManager<T extends (...args: any[]) => Promise<any>> {
       // Check if this is the latest call
       if (this.executionCount === currentExecutionCount) {
         this.setStatus("fulfilled");
-        return result as ReturnType<T>;
+        return result;
       } else {
-        return Promise.reject(new Error("A newer call has been made"));
+        throw new Error("A newer call has been made");
       }
     } catch (error) {
       this.setStatus("rejected");
-      return Promise.reject(error);
+      throw error;
     }
   };
 }
