@@ -77,7 +77,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
-    "xorma": "file:../xorma/xorma-0.0.0.tgz",
+    "xorma": "file:../xorma/xorma-0.0.1.tgz",
     "zod": "^3.24.1"
   },
   "devDependencies": {
